@@ -1,0 +1,1370 @@
+{
+  "info": {
+    "name": "Clinic Backend API",
+    "description": "Complete API collection for Clinic Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@clinic.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login to get authentication token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.token) {",
+                  "        pm.collectionVariables.set('authToken', response.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get current authenticated user information"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout current user"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Ahmed Ali\",\n  \"email\": \"ahmed@clinic.com\",\n  \"password\": \"password123\",\n  \"role\": \"طبيب\",\n  \"branch\": \"{{branchId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Create a new user (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Get all users (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Get user by ID (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Ahmed Ali Updated\",\n  \"email\": \"ahmed.updated@clinic.com\",\n  \"role\": \"طبيب\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Update user (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Delete user (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id", "toggle-status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Toggle user active status (Manager/Owner only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Roles",
+      "item": [
+        {
+          "name": "Get Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles/doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles", "doctors"]
+            },
+            "description": "Get all doctors (Owner/Doctor only)"
+          }
+        },
+        {
+          "name": "Get Managers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles/managers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles", "managers"]
+            },
+            "description": "Get all managers (Owner only)"
+          }
+        },
+        {
+          "name": "Get Accountants",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles/accountants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles", "accountants"]
+            },
+            "description": "Get all accountants (Owner only)"
+          }
+        },
+        {
+          "name": "Get Secretaries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user-roles/secretaries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user-roles", "secretaries"]
+            },
+            "description": "Get all secretaries (Owner only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"محمد أحمد\",\n  \"phone\": \"01234567890\",\n  \"gender\": \"male\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"address\": \"القاهرة، مصر\",\n  \"medicalHistory\": \"لا توجد أمراض مزمنة\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients"]
+            },
+            "description": "Create a new patient (Owner/Secretary/Doctor only)"
+          }
+        },
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients"]
+            },
+            "description": "Get all patients"
+          }
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Get patient by ID"
+          }
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"محمد أحمد محمود\",\n  \"phone\": \"01234567891\",\n  \"address\": \"الإسكندرية، مصر\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Update patient (Owner/Secretary/Doctor only)"
+          }
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Delete patient (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Get Patient with Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/:id/with-appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", ":id", "with-appointments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Get patient with their appointments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": \"{{patientId}}\",\n  \"doctor\": \"{{doctorId}}\",\n  \"date\": \"2024-01-15T10:00:00.000Z\",\n  \"type\": \"استشارة\",\n  \"notes\": \"موعد للمراجعة\",\n  \"service\": \"{{serviceId}}\",\n  \"departmentId\": \"{{departmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Create a new appointment (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Get all appointments (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Get Appointments by Patient",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/patient/:patientId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "patient", ":patientId"],
+              "variable": [
+                {
+                  "key": "patientId",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Get appointments for a specific patient (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{appointmentId}}"
+                }
+              ]
+            },
+            "description": "Get appointment by ID (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2024-01-16T11:00:00.000Z\",\n  \"status\": \"نشط\",\n  \"notes\": \"تم تأجيل الموعد\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{appointmentId}}"
+                }
+              ]
+            },
+            "description": "Update appointment (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{appointmentId}}"
+                }
+              ]
+            },
+            "description": "Delete appointment (Manager/Owner only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Branches",
+      "item": [
+        {
+          "name": "Create Branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"الفرع الرئيسي\",\n  \"address\": \"شارع التحرير، القاهرة\",\n  \"phone\": \"01234567890\",\n  \"manager\": \"{{managerId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/branches",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches"]
+            },
+            "description": "Create a new branch (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Get All Branches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches"]
+            },
+            "description": "Get all branches (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Update Branch",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"الفرع الرئيسي - محدث\",\n  \"address\": \"شارع التحرير، القاهرة - محدث\",\n  \"phone\": \"01234567891\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{branchId}}"
+                }
+              ]
+            },
+            "description": "Update branch (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Delete Branch",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/branches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "branches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{branchId}}"
+                }
+              ]
+            },
+            "description": "Delete branch (Owner/Manager only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments?branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments"],
+              "query": [
+                {
+                  "key": "branchId",
+                  "value": "{{branchId}}"
+                }
+              ]
+            },
+            "description": "Get all departments for a branch"
+          }
+        },
+        {
+          "name": "Get Department by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{departmentId}}"
+                }
+              ]
+            },
+            "description": "Get department by ID"
+          }
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"طب الأسنان\",\n  \"description\": \"قسم طب الأسنان والتجميل\",\n  \"branch\": \"{{branchId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments"]
+            },
+            "description": "Create a new department"
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"طب الأسنان والتجميل\",\n  \"description\": \"قسم طب الأسنان والتجميل - محدث\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{departmentId}}"
+                }
+              ]
+            },
+            "description": "Update department"
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/departments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "departments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{departmentId}}"
+                }
+              ]
+            },
+            "description": "Delete department"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "Create Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"تنظيف الأسنان\",\n  \"description\": \"خدمة تنظيف الأسنان والوقاية\",\n  \"price\": 200,\n  \"department\": \"{{departmentId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services"]
+            },
+            "description": "Create a new service (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Get All Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services"]
+            },
+            "description": "Get all services"
+          }
+        },
+        {
+          "name": "Get Service by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{serviceId}}"
+                }
+              ]
+            },
+            "description": "Get service by ID"
+          }
+        },
+        {
+          "name": "Get Services by Department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/by-department/:departmentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services", "by-department", ":departmentId"],
+              "variable": [
+                {
+                  "key": "departmentId",
+                  "value": "{{departmentId}}"
+                }
+              ]
+            },
+            "description": "Get services by department"
+          }
+        },
+        {
+          "name": "Update Service",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"تنظيف الأسنان المتقدم\",\n  \"description\": \"خدمة تنظيف الأسنان والوقاية المتقدمة\",\n  \"price\": 250\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{serviceId}}"
+                }
+              ]
+            },
+            "description": "Update service (Owner/Manager only)"
+          }
+        },
+        {
+          "name": "Delete Service",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/services/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "services", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{serviceId}}"
+                }
+              ]
+            },
+            "description": "Delete service (Owner/Manager only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Treatment Stages",
+      "item": [
+        {
+          "name": "Create Treatment Stage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": \"{{patientId}}\",\n  \"doctor\": \"{{doctorId}}\",\n  \"appointment\": \"{{appointmentId}}\",\n  \"stageName\": \"المرحلة الأولى\",\n  \"description\": \"بداية العلاج\",\n  \"notes\": \"ملاحظات الطبيب\",\n  \"nextAppointment\": \"2024-01-20T10:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/treatment-stages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "treatment-stages"]
+            },
+            "description": "Create a new treatment stage (Owner/Doctor only)"
+          }
+        },
+        {
+          "name": "Get Treatment Stages by Patient",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/treatment-stages/patient/:patientId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "treatment-stages", "patient", ":patientId"],
+              "variable": [
+                {
+                  "key": "patientId",
+                  "value": "{{patientId}}"
+                }
+              ]
+            },
+            "description": "Get treatment stages for a specific patient"
+          }
+        },
+        {
+          "name": "Get All Treatment Stages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/treatment-stages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "treatment-stages"]
+            },
+            "description": "Get all treatment stages (Manager/Owner only)"
+          }
+        },
+        {
+          "name": "Update Treatment Stage",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stageName\": \"المرحلة الأولى - محدثة\",\n  \"description\": \"بداية العلاج - محدثة\",\n  \"notes\": \"ملاحظات الطبيب المحدثة\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/treatment-stages/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "treatment-stages", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{treatmentStageId}}"
+                }
+              ]
+            },
+            "description": "Update treatment stage (Manager only)"
+          }
+        },
+        {
+          "name": "Delete Treatment Stage",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/treatment-stages/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "treatment-stages", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{treatmentStageId}}"
+                }
+              ]
+            },
+            "description": "Delete treatment stage (Manager only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Get Unpaid Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/unpaid",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "unpaid"]
+            },
+            "description": "Get all unpaid invoices"
+          }
+        },
+        {
+          "name": "Get All Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices"]
+            },
+            "description": "Get all invoices"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": \"{{patientId}}\",\n  \"appointment\": \"{{appointmentId}}\",\n  \"invoice\": \"{{invoiceId}}\",\n  \"amount\": 500,\n  \"method\": \"نقدًا\",\n  \"receivedBy\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments"]
+            },
+            "description": "Create a new payment (Accountant only)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial Records",
+      "item": [
+        {
+          "name": "Create Financial Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recordType\": \"expense\",\n  \"description\": \"مصروفات الكهرباء\",\n  \"recordDate\": \"2024-01-15\",\n  \"totalAmount\": 1000,\n  \"status\": \"paid\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/financial-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial-records"]
+            },
+            "description": "Create a new financial record"
+          }
+        },
+        {
+          "name": "Get All Financial Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/financial-records?recordType=expense",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial-records"],
+              "query": [
+                {
+                  "key": "recordType",
+                  "value": "expense",
+                  "description": "Filter by record type: expense, purchase, salary"
+                }
+              ]
+            },
+            "description": "Get all financial records with optional filtering"
+          }
+        },
+        {
+          "name": "Get Financial Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/financial-records/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial-records", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{financialRecordId}}"
+                }
+              ]
+            },
+            "description": "Get financial record by ID"
+          }
+        },
+        {
+          "name": "Add Payment to Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500,\n  \"paymentDate\": \"2024-01-15\",\n  \"method\": \"cash\",\n  \"notes\": \"دفعة جزئية\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/financial-records/:id/add-payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial-records", ":id", "add-payment"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{financialRecordId}}"
+                }
+              ]
+            },
+            "description": "Add payment to a financial record"
+          }
+        },
+        {
+          "name": "Delete Financial Record",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/financial-records/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "financial-records", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{financialRecordId}}"
+                }
+              ]
+            },
+            "description": "Delete financial record"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Get all products"
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{productId}}"
+                }
+              ]
+            },
+            "description": "Get product by ID"
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"معجون أسنان\",\n  \"category\": \"منتجات العناية\",\n  \"unit\": \"قطعة\",\n  \"purchasePrice\": 50,\n  \"sellingPrice\": 75,\n  \"stock\": 100,\n  \"notes\": \"معجون أسنان عالي الجودة\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            },
+            "description": "Create a new product"
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"معجون أسنان محدث\",\n  \"sellingPrice\": 80,\n  \"stock\": 150\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{productId}}"
+                }
+              ]
+            },
+            "description": "Update product"
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{productId}}"
+                }
+              ]
+            },
+            "description": "Delete product"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales",
+      "item": [
+        {
+          "name": "Create Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": \"{{patientId}}\",\n  \"items\": [\n    {\n      \"product\": \"{{productId}}\",\n      \"quantity\": 2,\n      \"unitPrice\": 75\n    }\n  ],\n  \"paidAmount\": 100,\n  \"paymentMethod\": \"نقدًا\",\n  \"notes\": \"بيع منتجات للمريض\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sales",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales"]
+            },
+            "description": "Create a new sale"
+          }
+        },
+        {
+          "name": "Get All Sales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales?patient={{patientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales"],
+              "query": [
+                {
+                  "key": "patient",
+                  "value": "{{patientId}}",
+                  "description": "Filter sales by patient ID (optional)"
+                }
+              ]
+            },
+            "description": "Get all sales with optional patient filtering"
+          }
+        },
+        {
+          "name": "Get Sale by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{saleId}}"
+                }
+              ]
+            },
+            "description": "Get sale by ID"
+          }
+        },
+        {
+          "name": "Add Payment to Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50,\n  \"notes\": \"دفعة إضافية\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/:id/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales", ":id", "payments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{saleId}}"
+                }
+              ]
+            },
+            "description": "Add payment to a sale"
+          }
+        },
+        {
+          "name": "Get Sale Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/:id/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales", ":id", "payments"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{saleId}}"
+                }
+              ]
+            },
+            "description": "Get all payments for a specific sale"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard"]
+            },
+            "description": "Get dashboard statistics and recent activities"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc -p tsconfig.json --noCheck",
+    "postinstall": "tsc -p tsconfig.json --noCheck",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed:admin": "ts-node scripts/seedAdmin.ts",
+    "migrate:roles": "ts-node scripts/migrateRoles.ts",
+    "migrate:permissions": "ts-node scripts/migratePermissions.ts",
+    "migrate:assign": "ts-node scripts/assignPermissionsToRoles.ts",
+    "migrate:users": "ts-node scripts/migrateUsers.ts",
+    "migrate:all": "ts-node scripts/runMigration.ts",
+    "migrate:setup": "ts-node scripts/migrateAllRolesAndPermissions.ts",
+    "migrate:verify": "ts-node scripts/verifyMigration.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18 <23"
+  },
+  "packageManager": "pnpm@10.8.1",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.4.1",
+    "mongoose": "^8.14.1",
+    "morgan": "^1.10.0",
+    "winston": "^3.15.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.15.3",
+    "@types/winston": "^2.4.4",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}

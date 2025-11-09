@@ -1,0 +1,40 @@
+// src/models/payment.model.ts
+
+import mongoose, { Schema, Document } from 'mongoose'
+
+export interface IPayment extends Document {
+  patient: mongoose.Types.ObjectId
+  appointment?: mongoose.Types.ObjectId
+  invoice: mongoose.Types.ObjectId
+  amount: number
+  method: 'نقدًا' | 'بطاقة'
+  date: Date
+  receivedBy: mongoose.Types.ObjectId // المحاسب
+  createdAt: Date
+  updatedAt: Date
+}
+
+const paymentSchema = new Schema<IPayment>(
+  {
+    patient: { type: Schema.Types.ObjectId, ref: 'Patient', required: true },
+    appointment: { type: Schema.Types.ObjectId, ref: 'Appointment' },
+    invoice: { type: Schema.Types.ObjectId, ref: 'Invoice', required: true },
+    amount: { type: Number, required: true },
+    method: {
+      type: String,
+      enum: ['نقدًا', 'بطاقة'],
+      required: true,
+    },
+    date: { type: Date, default: Date.now },
+    receivedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  },
+  { timestamps: true }
+)
+
+// Database indexes for performance optimization
+paymentSchema.index({ invoice: 1 })
+paymentSchema.index({ patient: 1, date: -1 })
+paymentSchema.index({ date: -1 })
+paymentSchema.index({ createdAt: -1 })
+
+export const Payment = mongoose.model<IPayment>('Payment', paymentSchema)
