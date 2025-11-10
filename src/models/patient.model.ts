@@ -183,7 +183,6 @@ patientSchema.pre('save', async function (next) {
 patientSchema.index({ phone: 1 })
 patientSchema.index({ fullName: 'text' }) // For text search
 patientSchema.index({ createdAt: -1 })
-patientSchema.index({ refNumber: 1 })
 patientSchema.index({ email: 1 })
 patientSchema.index({ nationalId: 1 })
 
