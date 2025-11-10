@@ -41,6 +41,7 @@ app.set('trust proxy', 1)
 app.use(cookieParser())
 
 // CORS configuration - supports multiple origins for cross-domain requests
+// MUST be applied before rate limiting to handle preflight requests
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000']
@@ -61,17 +62,21 @@ app.use(
       const normalizedOrigin = normalizeOrigin(origin)
       const normalizedAllowedOrigins = allowedOrigins.map(normalizeOrigin)
       
+      // Always allow localhost origins (for local development connecting to production)
+      // This is safe because localhost is only accessible from the same machine
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        if (process.env.NODE_ENV === 'production') {
+          logger.info('CORS: Allowing localhost origin in production', { origin })
+        }
+        return callback(null, true)
+      }
+      
       // Check if origin is in allowed list (case-insensitive comparison)
       if (normalizedAllowedOrigins.some(allowed => 
         allowed.toLowerCase() === normalizedOrigin.toLowerCase()
       )) {
         callback(null, true)
       } else {
-        // In development, allow localhost origins
-        if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
-          return callback(null, true)
-        }
-        
         // Log the rejected origin for debugging
         logger.warn('CORS: Origin not allowed', {
           origin,
@@ -86,9 +91,11 @@ app.use(
     },
     credentials: true, // يسمح بإرسال الكوكيز
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     exposedHeaders: ['Set-Cookie'],
     optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+    preflightContinue: false, // Let CORS handle preflight (don't pass to next middleware)
+    maxAge: 86400, // Cache preflight requests for 24 hours
   })
 )
 app.use(express.json())

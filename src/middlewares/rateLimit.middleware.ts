@@ -8,6 +8,10 @@ export const apiLimiter = rateLimit({
   message: 'تم تجاوز عدد الطلبات المسموح بها. يرجى المحاولة لاحقاً.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for OPTIONS requests (CORS preflight)
+    return req.method === 'OPTIONS'
+  },
 })
 
 // Stricter rate limiter for authentication endpoints
@@ -18,6 +22,10 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
+  skip: (req) => {
+    // Skip rate limiting for OPTIONS requests (CORS preflight)
+    return req.method === 'OPTIONS'
+  },
 })
 
 
