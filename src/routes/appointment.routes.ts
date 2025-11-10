@@ -7,7 +7,7 @@ import {
   deleteAppointment,
   getAppointmentsByPatient,
 } from '../controllers/appointment.controller'
-import { protect, authorizeRoles } from '../middlewares/auth.middleware'
+import { protect, authorizeRoles, authorizePermission, authorizePermissionOrRole } from '../middlewares/auth.middleware'
 import { validate } from '../middlewares/validate'
 import {
   createAppointmentSchema,
@@ -26,9 +26,13 @@ const createAllowedRoles = ['مدير', 'مالك', 'سكرتير']
 const manageAllowedRoles = ['مدير', 'مالك']
 
 // السماح للأطباء بعرض مواعيدهم الخاصة
+// Allow users with patients.view-appointments OR appointments.view permission OR roles: 'مدير', 'مالك', 'طبيب'
 router.get(
   '/patient/:patientId',
-  authorizeRoles('مدير', 'مالك', 'طبيب'),
+  authorizePermissionOrRole(
+    ['patients.view-appointments', 'appointments.view'],
+    ['مدير', 'مالك', 'طبيب']
+  ),
   getAppointmentsByPatient
 )
 router.get('/', getAllAppointments) // Role filtering handled in controller
@@ -42,13 +46,14 @@ router.post(
   createAppointment
 )
 
-// تحديث وحذف المواعيد: المالك والمدير فقط
+// تحديث المواعيد: المالك والمدير أو من لديه صلاحية appointments.edit
 router.put(
   '/:id',
-  authorizeRoles(...manageAllowedRoles),
+  authorizePermission('appointments.edit'),
   validate(updateAppointmentSchema),
   updateAppointment
 )
+// حذف المواعيد: المالك والمدير فقط
 router.delete('/:id', authorizeRoles(...manageAllowedRoles), deleteAppointment)
 
 export default router

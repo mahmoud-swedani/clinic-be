@@ -170,6 +170,14 @@ export class AppointmentService {
    * Update appointment by ID
    */
   static async updateAppointment(id: string, updateData: any) {
+    // Get the old appointment data before updating
+    const oldAppointment = await Appointment.findById(id)
+      .populate('patient')
+      .populate('doctor')
+      .populate('service')
+      .populate('departmentId')
+      .lean()
+
     const updated = await Appointment.findByIdAndUpdate(id, updateData, {
       new: true,
     })
@@ -179,15 +187,23 @@ export class AppointmentService {
       .populate('departmentId')
       .lean()
 
-    return updated
+    return { updated, oldAppointment }
   }
 
   /**
    * Delete appointment by ID
    */
   static async deleteAppointment(id: string) {
+    // Get the appointment data before deleting
+    const appointment = await Appointment.findById(id)
+      .populate('patient')
+      .populate('doctor')
+      .populate('service')
+      .populate('departmentId')
+      .lean()
+
     const deleted = await Appointment.findByIdAndDelete(id)
-    return deleted
+    return { deleted, appointment }
   }
 }
 

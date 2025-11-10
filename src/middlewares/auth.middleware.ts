@@ -84,6 +84,10 @@ export const protect = async (
 export const authorizeRoles = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
+      logger.warn('Authorization failed: No user in request', {
+        path: req.path,
+        method: req.method,
+      })
       res.status(403).json({ message: 'صلاحيات غير كافية' })
       return
     }
@@ -92,6 +96,13 @@ export const authorizeRoles = (...roles: string[]) => {
     const userRoleName = getUserRoleName(req.user)
     
     if (!userRoleName) {
+      logger.warn('Authorization failed: User has no role', {
+        userId: req.user._id,
+        path: req.path,
+        method: req.method,
+        userRoleId: req.user.roleId,
+        userRoleEnum: req.user.role,
+      })
       res.status(403).json({ message: 'صلاحيات غير كافية' })
       return
     }
@@ -120,6 +131,13 @@ export const authorizeRoles = (...roles: string[]) => {
       })
     }
 
+    logger.warn('Authorization failed: Insufficient role', {
+      userId: req.user._id,
+      userRole: userRoleName,
+      requiredRoles: roles,
+      path: req.path,
+      method: req.method,
+    })
     res.status(403).json({ message: 'صلاحيات غير كافية' })
   }
 }
@@ -205,6 +223,60 @@ export const authorizeAnyPermission = (...permissions: string[]) => {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user._id,
         permissions,
+      })
+      res.status(500).json({ message: 'خطأ في التحقق من الصلاحيات' })
+    }
+  }
+}
+
+/**
+ * Middleware to check if user has any of the specified permissions OR any of the specified roles
+ * This provides backward compatibility by allowing role-based access if permissions are not set up
+ */
+export const authorizePermissionOrRole = (
+  permissions: string[],
+  roles: string[]
+) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      res.status(403).json({ message: 'صلاحيات غير كافية' })
+      return
+    }
+
+    try {
+      // First check permissions
+      if (
+        req.userPermissions &&
+        permissions.some((perm) => req.userPermissions!.includes(perm))
+      ) {
+        next()
+        return
+      }
+
+      const hasPermission = await AuthorizationService.hasAnyPermission(
+        req.user._id.toString(),
+        permissions
+      )
+
+      if (hasPermission) {
+        next()
+        return
+      }
+
+      // If no permission, check roles as fallback
+      const userRoleName = getUserRoleName(req.user)
+      if (userRoleName && roles.includes(userRoleName)) {
+        next()
+        return
+      }
+
+      res.status(403).json({ message: 'صلاحيات غير كافية' })
+    } catch (error) {
+      logger.error('Error checking permission or role authorization', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: req.user._id,
+        permissions,
+        roles,
       })
       res.status(500).json({ message: 'خطأ في التحقق من الصلاحيات' })
     }

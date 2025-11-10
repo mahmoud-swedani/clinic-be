@@ -4,8 +4,10 @@ import {
   getAuditLogs,
   getEntityAuditHistory,
   getUserAuditHistory,
+  getAppointmentActivities,
+  getPatientActivities,
 } from '../controllers/auditLog.controller'
-import { protect, authorizeRoles } from '../middlewares/auth.middleware'
+import { protect, authorizeRoles, authorizeAnyPermission } from '../middlewares/auth.middleware'
 
 const router = express.Router()
 
@@ -22,6 +24,22 @@ router.get(
   protect,
   authorizeRoles('مالك', 'مدير'),
   getUserAuditHistory
+)
+
+// Get appointment activities - allow users with appointments.view-activities permission
+router.get(
+  '/appointments/:appointmentId',
+  protect,
+  authorizeAnyPermission('appointments.view-activities', 'appointments.view', 'audit-logs.view'),
+  getAppointmentActivities
+)
+
+// Get patient activities - allow users with patients.view-activities permission
+router.get(
+  '/patients/:patientId',
+  protect,
+  authorizeAnyPermission('patients.view-activities', 'patients.view', 'audit-logs.view'),
+  getPatientActivities
 )
 
 export default router

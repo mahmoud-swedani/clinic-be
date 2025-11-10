@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import { User } from '../models/user.model'
 import jwt from 'jsonwebtoken'
 import { sendSuccess, sendError } from '../utils/apiResponse'
+import { getUserRoleName } from '../services/roleLookup.service'
+import { AuthorizationService } from '../services/authorization.service'
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
@@ -65,11 +67,31 @@ export const getMe = async (req: Request, res: Response) => {
     return sendError(res, 'غير مصرح', 401)
   }
 
+  // Get the actual role name from database roleId (preferred) or fallback to enum
+  const roleName = getUserRoleName(user) || user.role
+
+  // Get user permissions
+  const userPermissions = await AuthorizationService.getUserPermissions(
+    user._id.toString()
+  )
+
+  // Get role details if roleId exists
+  let roleDetails = null
+  if (user.roleId) {
+    const roleData = await AuthorizationService.getUserRoleAndPermissions(
+      user._id.toString()
+    )
+    roleDetails = roleData?.role || null
+  }
+
   return sendSuccess(res, {
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    role: roleName,
+    roleId: user.roleId,
+    roleDetails,
+    permissions: userPermissions,
     branch: user.branch,
   })
 }

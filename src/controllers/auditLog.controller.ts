@@ -96,3 +96,53 @@ export const getUserAuditHistory = async (req: Request, res: Response) => {
   }
 }
 
+// Get appointment activities
+export const getAppointmentActivities = async (req: Request, res: Response) => {
+  try {
+    const { appointmentId } = req.params
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string)
+      : 50
+
+    const logs = await AuditService.getEntityAuditHistory(
+      'Appointment',
+      appointmentId,
+      limit
+    )
+
+    return sendSuccess(res, logs)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب سجل أنشطة الموعد',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
+// Get patient activities
+export const getPatientActivities = async (req: Request, res: Response) => {
+  try {
+    const { patientId } = req.params
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string)
+      : 50
+
+    const logs = await AuditService.getEntityAuditHistory(
+      'Patient',
+      patientId,
+      limit
+    )
+
+    return sendSuccess(res, logs)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب سجل أنشطة المريض',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+

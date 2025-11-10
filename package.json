@@ -16,7 +16,8 @@
     "migrate:users": "ts-node scripts/migrateUsers.ts",
     "migrate:all": "ts-node scripts/runMigration.ts",
     "migrate:setup": "ts-node scripts/migrateAllRolesAndPermissions.ts",
-    "migrate:verify": "ts-node scripts/verifyMigration.ts"
+    "migrate:verify": "ts-node scripts/verifyMigration.ts",
+    "migrate:patients": "ts-node scripts/migratePatientFields.ts"
   },
   "keywords": [],
   "author": "",

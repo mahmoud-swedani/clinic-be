@@ -20,6 +20,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'appointments.create',
     'appointments.edit',
     'appointments.delete',
+    'appointments.add-treatment-stage',
     'treatment-stages.view',
     'treatment-stages.create',
     'treatment-stages.edit',
@@ -78,6 +79,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'appointments.create',
     'appointments.edit',
     'appointments.delete',
+    'appointments.add-treatment-stage',
     'treatment-stages.view',
     'treatment-stages.create',
     'treatment-stages.edit',
@@ -122,6 +124,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     // Doctor: treatment stages, patients view, appointments view
     'patients.view',
     'appointments.view',
+    'appointments.add-treatment-stage',
     'treatment-stages.view',
     'treatment-stages.create',
     'treatment-stages.edit',
@@ -149,6 +152,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'appointments.view',
     'appointments.create',
     'appointments.edit',
+    'appointments.add-treatment-stage',
   ],
 }
 

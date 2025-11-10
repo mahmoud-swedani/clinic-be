@@ -154,6 +154,32 @@ export const deleteTreatmentStage = async (req: Request, res: Response) => {
   }
 }
 
+// 📄 الحصول على مراحل علاجية لموعد معين
+export const getTreatmentStagesByAppointment = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const appointmentId = req.params.appointmentId
+
+    const stages = await TreatmentStage.find({ appointment: appointmentId })
+      .populate('doctor', 'name')
+      .populate('appointment')
+      .populate('patient', 'fullName')
+      .sort({ createdAt: -1 })
+      .lean()
+
+    return sendSuccess(res, stages)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب المراحل العلاجية',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
 // 📄 الحصول على كل المراحل
 export const getAllTreatmentStages = async (req: Request, res: Response) => {
   try {

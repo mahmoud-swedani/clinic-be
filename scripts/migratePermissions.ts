@@ -50,6 +50,11 @@ const PERMISSIONS = [
     description: 'حذف المواعيد',
     category: 'appointments',
   },
+  {
+    name: 'appointments.add-treatment-stage',
+    description: 'إضافة مرحلة علاجية من الموعد',
+    category: 'appointments',
+  },
   // Treatment Stages
   {
     name: 'treatment-stages.view',

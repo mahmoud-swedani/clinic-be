@@ -26,7 +26,11 @@ import analyticsRoutes from './routes/analytics.routes'
 import roleRoutes from './routes/role.routes'
 import permissionRoutes from './routes/permission.routes'
 import rolePermissionRoutes from './routes/rolePermission.routes'
+import userRoleRoutes from './routes/userRole.routes'
 import auditLogRoutes from './routes/auditLog.routes'
+import patientMedicationRoutes from './routes/patientMedication.routes'
+import patientImmunizationRoutes from './routes/patientImmunization.routes'
+import patientTestResultRoutes from './routes/patientTestResult.routes'
 
 const app = express()
 
@@ -118,6 +122,9 @@ app.use('/api', apiLimiter)
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/patients', patientRoutes)
+app.use('/api', patientMedicationRoutes)
+app.use('/api', patientImmunizationRoutes)
+app.use('/api', patientTestResultRoutes)
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/branches', branchRoutes)
 app.use('/api/treatment-stages', treatmentStageRoutes)
@@ -130,9 +137,10 @@ app.use('/api/sales', saleRoutes)
 app.use('/api/departments', departmentsRoutes)
 app.use('/api/services', servicesRoutes)
 app.use('/api/analytics', analyticsRoutes)
-app.use('/api/roles', roleRoutes)
-app.use('/api/permissions', permissionRoutes)
 app.use('/api/roles', rolePermissionRoutes)
+app.use('/api/permissions', permissionRoutes)
+app.use('/api/roles', roleRoutes)
+app.use('/api/user-roles', userRoleRoutes)
 app.use('/api/audit-logs', auditLogRoutes)
 
 // مسار الاختبار الرئيسي

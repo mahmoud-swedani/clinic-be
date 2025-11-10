@@ -27,11 +27,17 @@ const PERMISSIONS = [
   { name: 'patients.create', description: 'إنشاء مريض جديد', category: 'patients' },
   { name: 'patients.edit', description: 'تعديل بيانات المرضى', category: 'patients' },
   { name: 'patients.delete', description: 'حذف المرضى', category: 'patients' },
+  { name: 'patients.view-appointments', description: 'عرض المواعيد من صفحة المريض', category: 'patients' },
+  { name: 'patients.view-treatment-stages', description: 'عرض المراحل العلاجية من صفحة المريض', category: 'patients' },
+  { name: 'patients.view-sales', description: 'عرض المبيعات من صفحة المريض', category: 'patients' },
+  { name: 'patients.view-activities', description: 'عرض سجل الأنشطة للمرضى', category: 'patients' },
   // Appointments
   { name: 'appointments.view', description: 'عرض المواعيد', category: 'appointments' },
   { name: 'appointments.create', description: 'إنشاء موعد جديد', category: 'appointments' },
   { name: 'appointments.edit', description: 'تعديل المواعيد', category: 'appointments' },
   { name: 'appointments.delete', description: 'حذف المواعيد', category: 'appointments' },
+  { name: 'appointments.add-treatment-stage', description: 'إضافة مرحلة علاجية من الموعد', category: 'appointments' },
+  { name: 'appointments.view-activities', description: 'عرض سجل الأنشطة للمواعيد', category: 'appointments' },
   // Treatment Stages
   { name: 'treatment-stages.view', description: 'عرض المراحل العلاجية', category: 'treatment-stages' },
   { name: 'treatment-stages.create', description: 'إنشاء مرحلة علاجية', category: 'treatment-stages' },
@@ -96,7 +102,8 @@ const PERMISSIONS = [
 const ROLE_PERMISSIONS: { [key: string]: string[] } = {
   مالك: [
     'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
-    'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete',
+    'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-sales', 'patients.view-activities',
+    'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete', 'appointments.add-treatment-stage', 'appointments.view-activities',
     'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
     'financial.view', 'financial.edit',
     'financial-records.view', 'financial-records.create', 'financial-records.edit', 'financial-records.delete',
@@ -113,7 +120,8 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
   ],
   مدير: [
     'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
-    'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete',
+    'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-sales', 'patients.view-activities',
+    'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete', 'appointments.add-treatment-stage', 'appointments.view-activities',
     'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
     'financial.view', 'financial.edit',
     'financial-records.view', 'financial-records.create', 'financial-records.edit', 'financial-records.delete',
@@ -128,10 +136,12 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
   ],
   طبيب: [
     'patients.view',
-    'appointments.view',
+    'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-activities',
+    'appointments.view', 'appointments.add-treatment-stage', 'appointments.view-activities',
     'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
   ],
   محاسب: [
+    'patients.view-appointments', 'patients.view-sales',
     'financial.view', 'financial.edit',
     'financial-records.view', 'financial-records.create', 'financial-records.edit',
     'invoices.view', 'invoices.create', 'invoices.edit',
@@ -139,7 +149,8 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
   ],
   سكرتير: [
     'patients.view', 'patients.create', 'patients.edit',
-    'appointments.view', 'appointments.create', 'appointments.edit',
+    'patients.view-appointments', 'patients.view-activities',
+    'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.add-treatment-stage', 'appointments.view-activities',
   ],
 }
 
