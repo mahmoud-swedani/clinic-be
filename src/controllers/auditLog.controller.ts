@@ -146,3 +146,28 @@ export const getPatientActivities = async (req: Request, res: Response) => {
   }
 }
 
+// Get treatment stage activities
+export const getTreatmentStageActivities = async (req: Request, res: Response) => {
+  try {
+    const { stageId } = req.params
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string)
+      : 50
+
+    const logs = await AuditService.getEntityAuditHistory(
+      'TreatmentStage',
+      stageId,
+      limit
+    )
+
+    return sendSuccess(res, logs)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب سجل أنشطة المرحلة العلاجية',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+

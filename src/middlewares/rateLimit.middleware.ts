@@ -9,6 +9,10 @@ export const apiLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   skip: (req) => {
+    // Skip rate limiting in development/local environment
+    if (process.env.NODE_ENV !== 'production') {
+      return true
+    }
     // Skip rate limiting for OPTIONS requests (CORS preflight)
     return req.method === 'OPTIONS'
   },
@@ -23,6 +27,10 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
   skip: (req) => {
+    // Skip rate limiting in development/local environment
+    if (process.env.NODE_ENV !== 'production') {
+      return true
+    }
     // Skip rate limiting for OPTIONS requests (CORS preflight)
     return req.method === 'OPTIONS'
   },

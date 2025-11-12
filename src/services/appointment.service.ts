@@ -89,11 +89,23 @@ export class AppointmentService {
 
   /**
    * Get appointments by patient ID
+   * Filters by doctor if user role is 'طبيب'
    */
-  static async getAppointmentsByPatient(patientId: string) {
-    const appointments = await Appointment.find({
-      patient: patientId,
-    })
+  static async getAppointmentsByPatient(
+    patientId: string,
+    user?: any,
+    userId?: string
+  ) {
+    // Build filter based on role
+    const filter: any = { patient: patientId }
+    const userRoleName = user ? getUserRoleName(user) : null
+    
+    if (userRoleName === 'طبيب' && userId) {
+      // Doctors can only see their own appointments for this patient
+      filter.doctor = userId
+    }
+
+    const appointments = await Appointment.find(filter)
       .sort({ date: -1 })
       .populate('patient')
       .populate('doctor')

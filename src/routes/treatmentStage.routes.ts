@@ -5,6 +5,7 @@ import {
   createTreatmentStage,
   getTreatmentStagesByPatient,
   getTreatmentStagesByAppointment,
+  getTreatmentStageById,
   updateTreatmentStage,
   deleteTreatmentStage,
   getAllTreatmentStages,
@@ -44,13 +45,41 @@ router.get(
   getTreatmentStagesByAppointment
 )
 
-//جلب مراحل كل
-router.get('/', protect, authorizeRoles('مدير', 'مالك'), getAllTreatmentStages)
+// GET - جلب مرحلة واحدة
+// Dynamic: Allow users with treatment-stages.view permission
+router.get(
+  '/:id',
+  protect,
+  authorizeAnyPermission('treatment-stages.view'),
+  getTreatmentStageById
+)
+
+// GET - جلب كل المراحل
+// Dynamic: Allow users with treatment-stages.view permission (no hardcoded roles)
+// This makes it work dynamically when permissions are assigned from frontend
+router.get(
+  '/',
+  protect,
+  authorizeAnyPermission('treatment-stages.view'),
+  getAllTreatmentStages
+)
 
 // PUT - تعديل مرحلة
-router.put('/:id', protect, authorizeRoles('مدير'), updateTreatmentStage)
+// Dynamic: Allow users with treatment-stages.edit permission
+router.put(
+  '/:id',
+  protect,
+  authorizeAnyPermission('treatment-stages.edit'),
+  updateTreatmentStage
+)
 
 // DELETE - حذف مرحلة
-router.delete('/:id', protect, authorizeRoles('مدير'), deleteTreatmentStage)
+// Dynamic: Allow users with treatment-stages.delete permission
+router.delete(
+  '/:id',
+  protect,
+  authorizeAnyPermission('treatment-stages.delete'),
+  deleteTreatmentStage
+)
 
 export default router

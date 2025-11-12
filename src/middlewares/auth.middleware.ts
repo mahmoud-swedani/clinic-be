@@ -270,6 +270,17 @@ export const authorizePermissionOrRole = (
         return
       }
 
+      // Log detailed authorization failure for debugging
+      logger.warn('Authorization failed: Insufficient permission or role', {
+        userId: req.user._id,
+        userRole: userRoleName,
+        userPermissions: req.userPermissions || [],
+        requiredPermissions: permissions,
+        requiredRoles: roles,
+        path: req.path,
+        method: req.method,
+      })
+
       res.status(403).json({ message: 'صلاحيات غير كافية' })
     } catch (error) {
       logger.error('Error checking permission or role authorization', {

@@ -1,12 +1,16 @@
 // controllers/treatmentStage.controller.ts
 
 import { Request, Response } from 'express'
+import mongoose from 'mongoose'
 import { TreatmentStage } from '../models/treatmentStage.model'
 import { Invoice } from '../models/invoice.model'
 import { SalePayment } from '../models/salePayment.model'
 import { Sale } from '../models/sale.model'
+import { Appointment } from '../models/appointment.model'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
+import { getUserRoleName } from '../services/roleLookup.service'
+import { AuditService } from '../services/audit.service'
 // ➕ إضافة مرحلة علاج
 export const createTreatmentStage = async (req: Request, res: Response) => {
   try {
@@ -18,6 +22,15 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
 
     if (!cost || !appointment) {
       // لا تُنشئ فاتورة إذا لم يكن هناك تكلفة أو موعد
+      // Log audit event for treatment stage creation
+      if (userId) {
+        await AuditService.logCreate(
+          'TreatmentStage',
+          stage._id as mongoose.Types.ObjectId,
+          userId as unknown as mongoose.Types.ObjectId,
+          req
+        )
+      }
       return sendSuccess(res, stage, 'تم إنشاء المرحلة بنجاح', 201)
     }
 
@@ -45,6 +58,16 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
 
     await invoice.save()
 
+    // Log audit event for treatment stage creation
+    if (userId) {
+      await AuditService.logCreate(
+        'TreatmentStage',
+        stage._id as mongoose.Types.ObjectId,
+        userId as unknown as mongoose.Types.ObjectId,
+        req
+      )
+    }
+
     return sendSuccess(
       res,
       { stage, invoice },
@@ -67,9 +90,31 @@ export const getTreatmentStagesByPatient = async (
 ) => {
   try {
     const patientId = req.params.patientId
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Build filter for treatment stages
+    const stageFilter: any = { patient: patientId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, only show treatment stages where doctor = userId
+    if (userRoleName === 'طبيب' && userId) {
+      stageFilter.doctor = userId
+
+      // Verify doctor has at least one appointment with this patient
+      const hasAppointment = await Appointment.findOne({
+        patient: patientId,
+        doctor: userId,
+      }).lean()
+
+      if (!hasAppointment) {
+        // Doctor doesn't have any appointments with this patient
+        return sendError(res, 'لا يمكن الوصول إلى بيانات هذا المريض', 403)
+      }
+    }
 
     // 1. جلب مراحل العلاج للمريض مع بيانات الطبيب، الموعد، والمريض
-    const stages = await TreatmentStage.find({ patient: patientId })
+    const stages = await TreatmentStage.find(stageFilter)
       .populate('doctor', 'name')
       .populate('appointment')
       .populate('patient', 'name')
@@ -114,17 +159,91 @@ export const getTreatmentStagesByPatient = async (
   }
 }
 
-// ✏️ تعديل مرحلة
-export const updateTreatmentStage = async (req: Request, res: Response) => {
+// 📄 الحصول على مرحلة علاجية واحدة
+export const getTreatmentStageById = async (req: Request, res: Response) => {
   try {
-    const stage = await TreatmentStage.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    ).lean()
+    const stageId = req.params.id
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Build filter
+    const filter: any = { _id: stageId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, only allow access to their own stages
+    if (userRoleName === 'طبيب' && userId) {
+      filter.doctor = userId
+    }
+
+    const stage = await TreatmentStage.findOne(filter)
+      .populate('doctor', 'name email')
+      .populate('appointment')
+      .populate('patient', 'fullName phone')
+      .lean()
+
     if (!stage) {
       return sendError(res, 'لم يتم العثور على المرحلة', 404)
     }
+
+    return sendSuccess(res, stage)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب المرحلة',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
+// ✏️ تعديل مرحلة
+export const updateTreatmentStage = async (req: Request, res: Response) => {
+  try {
+    const stageId = req.params.id
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Build filter to find the stage
+    const filter: any = { _id: stageId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, only allow editing their own stages
+    if (userRoleName === 'طبيب' && userId) {
+      filter.doctor = userId
+    }
+
+    // First check if stage exists and user has access
+    const existingStage = await TreatmentStage.findOne(filter).lean()
+    if (!existingStage) {
+      return sendError(res, 'لم يتم العثور على المرحلة أو ليس لديك صلاحية لتعديلها', 404)
+    }
+
+    // Update the stage
+    const stage = await TreatmentStage.findByIdAndUpdate(
+      stageId,
+      req.body,
+      { new: true }
+    )
+      .populate('doctor', 'name')
+      .populate('appointment')
+      .populate('patient', 'fullName')
+      .lean()
+
+    if (!stage) {
+      return sendError(res, 'فشل في تحديث المرحلة', 500)
+    }
+
+    // Log audit event for treatment stage update
+    if (userId) {
+      await AuditService.logUpdate(
+        'TreatmentStage',
+        stageId as unknown as mongoose.Types.ObjectId,
+        userId as unknown as mongoose.Types.ObjectId,
+        { before: existingStage, after: stage },
+        req
+      )
+    }
+
     return sendSuccess(res, stage, 'تم تحديث المرحلة بنجاح')
   } catch (error: any) {
     return sendError(
@@ -139,9 +258,39 @@ export const updateTreatmentStage = async (req: Request, res: Response) => {
 // 🗑 حذف مرحلة
 export const deleteTreatmentStage = async (req: Request, res: Response) => {
   try {
-    const deleted = await TreatmentStage.findByIdAndDelete(req.params.id)
+    const stageId = req.params.id
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Build filter to find the stage
+    const filter: any = { _id: stageId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, only allow deleting their own stages
+    if (userRoleName === 'طبيب' && userId) {
+      filter.doctor = userId
+    }
+
+    // First check if stage exists and user has access
+    const existingStage = await TreatmentStage.findOne(filter).lean()
+    if (!existingStage) {
+      return sendError(res, 'لم يتم العثور على المرحلة أو ليس لديك صلاحية لحذفها', 404)
+    }
+
+    // Log audit event for treatment stage deletion (before deletion)
+    if (userId) {
+      await AuditService.logDelete(
+        'TreatmentStage',
+        stageId as unknown as mongoose.Types.ObjectId,
+        userId as unknown as mongoose.Types.ObjectId,
+        existingStage,
+        req
+      )
+    }
+
+    const deleted = await TreatmentStage.findByIdAndDelete(stageId)
     if (!deleted) {
-      return sendError(res, 'لم يتم العثور على المرحلة', 404)
+      return sendError(res, 'فشل في حذف المرحلة', 500)
     }
     return sendSuccess(res, null, 'تم الحذف بنجاح')
   } catch (error: any) {
@@ -161,8 +310,32 @@ export const getTreatmentStagesByAppointment = async (
 ) => {
   try {
     const appointmentId = req.params.appointmentId
+    const userId = req.user?._id?.toString()
+    const user = req.user
 
-    const stages = await TreatmentStage.find({ appointment: appointmentId })
+    // Build filter for treatment stages
+    const stageFilter: any = { appointment: appointmentId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, verify the appointment belongs to them
+    if (userRoleName === 'طبيب' && userId) {
+      // First verify the appointment belongs to this doctor
+      const appointment = await Appointment.findById(appointmentId).lean()
+      
+      if (!appointment) {
+        return sendError(res, 'الموعد غير موجود', 404)
+      }
+
+      if (appointment.doctor.toString() !== userId) {
+        // Doctor doesn't own this appointment
+        return sendError(res, 'لا يمكن الوصول إلى بيانات هذا الموعد', 403)
+      }
+
+      // Filter stages to only those where doctor = userId
+      stageFilter.doctor = userId
+    }
+
+    const stages = await TreatmentStage.find(stageFilter)
       .populate('doctor', 'name')
       .populate('appointment')
       .populate('patient', 'fullName')
@@ -184,9 +357,19 @@ export const getTreatmentStagesByAppointment = async (
 export const getAllTreatmentStages = async (req: Request, res: Response) => {
   try {
     const { page, limit, skip } = parsePagination(req)
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Build filter based on role
+    const filter: any = {}
+    const userRoleName = user ? getUserRoleName(user) : null
+    if (userRoleName === 'طبيب' && userId) {
+      // Doctors can only see their own treatment stages
+      filter.doctor = userId
+    }
 
     const [stages, total] = await Promise.all([
-      TreatmentStage.find()
+      TreatmentStage.find(filter)
         .populate('doctor', 'name')
         .populate('appointment')
         .populate('patient', 'name') // ⬅️ هذا يضيف اسم المريض فقط
@@ -194,7 +377,7 @@ export const getAllTreatmentStages = async (req: Request, res: Response) => {
         .skip(skip)
         .limit(limit)
         .lean(),
-      TreatmentStage.countDocuments(),
+      TreatmentStage.countDocuments(filter),
     ])
 
     return sendPaginated(res, stages, { page, limit, total })

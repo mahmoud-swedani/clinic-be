@@ -76,6 +76,11 @@ const PERMISSIONS = [
     description: 'حذف المراحل العلاجية',
     category: 'treatment-stages',
   },
+  {
+    name: 'treatment-stages.view-activities',
+    description: 'عرض سجل الأنشطة للمراحل العلاجية',
+    category: 'treatment-stages',
+  },
   // Financial
   {
     name: 'financial.view',

@@ -36,7 +36,13 @@ export const createPatient = async (req: Request, res: Response) => {
 export const getAllPatients = async (req: Request, res: Response) => {
   try {
     const { page, limit } = parsePagination(req)
-    const { patients, total } = await PatientService.getAllPatients(page, limit)
+    const userId = req.user?._id?.toString()
+    const { patients, total } = await PatientService.getAllPatients(
+      page,
+      limit,
+      req.user, // Pass full user object
+      userId
+    )
     return sendPaginated(res, patients, { page, limit, total })
   } catch (error: any) {
     console.log(error)
@@ -55,7 +61,12 @@ export const getPatientWithAppointments = async (
   res: Response
 ) => {
   try {
-    const result = await PatientService.getPatientWithAppointments(req.params.id)
+    const userId = req.user?._id?.toString()
+    const result = await PatientService.getPatientWithAppointments(
+      req.params.id,
+      req.user, // Pass full user object
+      userId
+    )
     if (!result) {
       return sendError(res, 'المريض غير موجود', 404)
     }
@@ -72,7 +83,12 @@ export const getPatientWithAppointments = async (
 
 export const getPatientById = async (req: Request, res: Response) => {
   try {
-    const patient = await PatientService.getPatientById(req.params.id)
+    const userId = req.user?._id?.toString()
+    const patient = await PatientService.getPatientById(
+      req.params.id,
+      req.user, // Pass full user object
+      userId
+    )
     if (!patient) {
       return sendError(res, 'لم يتم العثور على المريض', 404)
     }

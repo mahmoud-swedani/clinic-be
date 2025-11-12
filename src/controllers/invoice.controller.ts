@@ -9,9 +9,12 @@ import { InvoiceService } from '../services/invoice.service'
 export const getUnpaidInvoices = async (req: Request, res: Response) => {
   try {
     const { page, limit } = parsePagination(req)
+    const userId = req.user?._id?.toString()
     const { invoices, total } = await InvoiceService.getUnpaidInvoices(
       page,
-      limit
+      limit,
+      req.user, // Pass full user object
+      userId
     )
     return sendPaginated(res, invoices, { page, limit, total })
   } catch (error: any) {
@@ -28,7 +31,13 @@ export const getUnpaidInvoices = async (req: Request, res: Response) => {
 export const getAllInvoices = async (req: Request, res: Response) => {
   try {
     const { page, limit } = parsePagination(req)
-    const { invoices, total } = await InvoiceService.getAllInvoices(page, limit)
+    const userId = req.user?._id?.toString()
+    const { invoices, total } = await InvoiceService.getAllInvoices(
+      page,
+      limit,
+      req.user, // Pass full user object
+      userId
+    )
     return sendPaginated(res, invoices, { page, limit, total })
   } catch (error: any) {
     return sendError(

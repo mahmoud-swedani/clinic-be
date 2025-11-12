@@ -3,6 +3,8 @@ import { Appointment } from '../models/appointment.model'
 import { PatientMedication } from '../models/patientMedication.model'
 import { PatientImmunization } from '../models/patientImmunization.model'
 import { PatientTestResult } from '../models/patientTestResult.model'
+import { getUserRoleName } from './roleLookup.service'
+import mongoose from 'mongoose'
 
 export class PatientService {
   /**
@@ -16,40 +18,122 @@ export class PatientService {
 
   /**
    * Get all patients with pagination
+   * Filters by doctor if user role is 'طبيب' - only shows patients with appointments with that doctor
    */
-  static async getAllPatients(page: number, limit: number) {
+  static async getAllPatients(
+    page: number,
+    limit: number,
+    user?: any,
+    userId?: string
+  ) {
     const skip = (page - 1) * limit
-    
-    const [patients, total] = await Promise.all([
-      Patient.find()
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Patient.countDocuments(),
-    ])
+    const userRoleName = user ? getUserRoleName(user) : null
 
-    return { patients, total }
+    if (userRoleName === 'طبيب' && userId) {
+      // For doctors: only show patients who have appointments with this doctor
+      // Get distinct patient IDs from appointments where doctor = userId
+      const patientIds = await Appointment.distinct('patient', {
+        doctor: userId,
+      })
+
+      if (patientIds.length === 0) {
+        // No patients found for this doctor
+        return { patients: [], total: 0 }
+      }
+
+      const [patients, total] = await Promise.all([
+        Patient.find({ _id: { $in: patientIds } })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Patient.countDocuments({ _id: { $in: patientIds } }),
+      ])
+
+      return { patients, total }
+    } else {
+      // No filter for non-doctors (admins, managers, etc.)
+      const [patients, total] = await Promise.all([
+        Patient.find()
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Patient.countDocuments(),
+      ])
+
+      return { patients, total }
+    }
   }
 
   /**
    * Get patient by ID
+   * For doctors: verifies that the patient has appointments with the doctor
    */
-  static async getPatientById(id: string) {
-    const patient = await Patient.findById(id).lean()
-    return patient
-  }
-
-  /**
-   * Get patient with appointments
-   */
-  static async getPatientWithAppointments(id: string) {
+  static async getPatientById(
+    id: string,
+    user?: any,
+    userId?: string
+  ) {
     const patient = await Patient.findById(id).lean()
     if (!patient) {
       return null
     }
 
-    const appointments = await Appointment.find({ patient: patient._id })
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, verify they have appointments with this patient
+    if (userRoleName === 'طبيب' && userId) {
+      const hasAppointment = await Appointment.findOne({
+        patient: id,
+        doctor: userId,
+      }).lean()
+
+      if (!hasAppointment) {
+        // Doctor doesn't have any appointments with this patient
+        return null
+      }
+    }
+
+    return patient
+  }
+
+  /**
+   * Get patient with appointments
+   * For doctors: only returns if patient has appointments with the doctor, and filters appointments
+   */
+  static async getPatientWithAppointments(
+    id: string,
+    user?: any,
+    userId?: string
+  ) {
+    const patient = await Patient.findById(id).lean()
+    if (!patient) {
+      return null
+    }
+
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // Build appointment filter
+    const appointmentFilter: any = { patient: patient._id }
+
+    // If user is a doctor, filter appointments to only those with this doctor
+    if (userRoleName === 'طبيب' && userId) {
+      appointmentFilter.doctor = userId
+
+      // Verify doctor has at least one appointment with this patient
+      const hasAppointment = await Appointment.findOne({
+        patient: id,
+        doctor: userId,
+      }).lean()
+
+      if (!hasAppointment) {
+        // Doctor doesn't have any appointments with this patient
+        return null
+      }
+    }
+
+    const appointments = await Appointment.find(appointmentFilter)
       .sort({ date: -1 })
       .lean()
 

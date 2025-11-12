@@ -43,23 +43,25 @@ const PERMISSIONS = [
   { name: 'treatment-stages.create', description: 'إنشاء مرحلة علاجية', category: 'treatment-stages' },
   { name: 'treatment-stages.edit', description: 'تعديل المراحل العلاجية', category: 'treatment-stages' },
   { name: 'treatment-stages.delete', description: 'حذف المراحل العلاجية', category: 'treatment-stages' },
-  // Financial
+  { name: 'treatment-stages.view-activities', description: 'عرض سجل الأنشطة للمراحل العلاجية', category: 'treatment-stages' },
+  // Financial (general financial permissions)
   { name: 'financial.view', description: 'عرض البيانات المالية', category: 'financial' },
   { name: 'financial.edit', description: 'تعديل البيانات المالية', category: 'financial' },
-  { name: 'financial-records.view', description: 'عرض السجلات المالية', category: 'financial' },
-  { name: 'financial-records.create', description: 'إنشاء سجل مالي', category: 'financial' },
-  { name: 'financial-records.edit', description: 'تعديل السجلات المالية', category: 'financial' },
-  { name: 'financial-records.delete', description: 'حذف السجلات المالية', category: 'financial' },
-  // Invoices
-  { name: 'invoices.view', description: 'عرض الفواتير', category: 'financial' },
-  { name: 'invoices.create', description: 'إنشاء فاتورة', category: 'financial' },
-  { name: 'invoices.edit', description: 'تعديل الفواتير', category: 'financial' },
-  { name: 'invoices.delete', description: 'حذف الفواتير', category: 'financial' },
-  // Payments
-  { name: 'payments.view', description: 'عرض المدفوعات', category: 'financial' },
-  { name: 'payments.create', description: 'إضافة دفعة', category: 'financial' },
-  { name: 'payments.edit', description: 'تعديل المدفوعات', category: 'financial' },
-  { name: 'payments.delete', description: 'حذف المدفوعات', category: 'financial' },
+  // Financial Records (المشتريات)
+  { name: 'financial-records.view', description: 'عرض السجلات المالية', category: 'financial-records' },
+  { name: 'financial-records.create', description: 'إنشاء سجل مالي', category: 'financial-records' },
+  { name: 'financial-records.edit', description: 'تعديل السجلات المالية', category: 'financial-records' },
+  { name: 'financial-records.delete', description: 'حذف السجلات المالية', category: 'financial-records' },
+  // Invoices (الفواتير)
+  { name: 'invoices.view', description: 'عرض الفواتير', category: 'invoices' },
+  { name: 'invoices.create', description: 'إنشاء فاتورة', category: 'invoices' },
+  { name: 'invoices.edit', description: 'تعديل الفواتير', category: 'invoices' },
+  { name: 'invoices.delete', description: 'حذف الفواتير', category: 'invoices' },
+  // Payments (المدفوعات)
+  { name: 'payments.view', description: 'عرض المدفوعات', category: 'payments' },
+  { name: 'payments.create', description: 'إضافة دفعة', category: 'payments' },
+  { name: 'payments.edit', description: 'تعديل المدفوعات', category: 'payments' },
+  { name: 'payments.delete', description: 'حذف المدفوعات', category: 'payments' },
   // Products
   { name: 'products.view', description: 'عرض المنتجات', category: 'products' },
   { name: 'products.create', description: 'إنشاء منتج', category: 'products' },
@@ -104,7 +106,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
     'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-sales', 'patients.view-activities',
     'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete', 'appointments.add-treatment-stage', 'appointments.view-activities',
-    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
+    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete', 'treatment-stages.view-activities',
     'financial.view', 'financial.edit',
     'financial-records.view', 'financial-records.create', 'financial-records.edit', 'financial-records.delete',
     'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
@@ -122,7 +124,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
     'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-sales', 'patients.view-activities',
     'appointments.view', 'appointments.create', 'appointments.edit', 'appointments.delete', 'appointments.add-treatment-stage', 'appointments.view-activities',
-    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
+    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete', 'treatment-stages.view-activities',
     'financial.view', 'financial.edit',
     'financial-records.view', 'financial-records.create', 'financial-records.edit', 'financial-records.delete',
     'invoices.view', 'invoices.create', 'invoices.edit', 'invoices.delete',
@@ -138,7 +140,7 @@ const ROLE_PERMISSIONS: { [key: string]: string[] } = {
     'patients.view',
     'patients.view-appointments', 'patients.view-treatment-stages', 'patients.view-activities',
     'appointments.view', 'appointments.add-treatment-stage', 'appointments.view-activities',
-    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete',
+    'treatment-stages.view', 'treatment-stages.create', 'treatment-stages.edit', 'treatment-stages.delete', 'treatment-stages.view-activities',
   ],
   محاسب: [
     'patients.view-appointments', 'patients.view-sales',

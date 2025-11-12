@@ -6,13 +6,15 @@ import {
   getUserAuditHistory,
   getAppointmentActivities,
   getPatientActivities,
+  getTreatmentStageActivities,
 } from '../controllers/auditLog.controller'
-import { protect, authorizeRoles, authorizeAnyPermission } from '../middlewares/auth.middleware'
+import { protect, authorizeRoles, authorizeAnyPermission, authorizePermissionOrRole } from '../middlewares/auth.middleware'
 
 const router = express.Router()
 
-// Only Owner and Manager can view audit logs
-router.get('/', protect, authorizeRoles('مالك', 'مدير'), getAuditLogs)
+// Allow users with appropriate permissions OR Owner/Manager roles to view audit logs
+// The controller will check entityType and allow appropriate permissions (appointments, treatment-stages, etc.)
+router.get('/', protect, authorizePermissionOrRole(['appointments.view-activities', 'treatment-stages.view', 'treatment-stages.view-activities', 'audit-logs.view'], ['مالك', 'مدير']), getAuditLogs)
 router.get(
   '/entity/:entityType/:entityId',
   protect,
@@ -40,6 +42,14 @@ router.get(
   protect,
   authorizeAnyPermission('patients.view-activities', 'patients.view', 'audit-logs.view'),
   getPatientActivities
+)
+
+// Get treatment stage activities - allow users with treatment-stages.view permission
+router.get(
+  '/treatment-stages/:stageId',
+  protect,
+  authorizeAnyPermission('treatment-stages.view', 'treatment-stages.view-activities', 'audit-logs.view'),
+  getTreatmentStageActivities
 )
 
 export default router

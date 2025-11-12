@@ -46,10 +46,13 @@ router.post(
   createAppointment
 )
 
-// تحديث المواعيد: المالك والمدير أو من لديه صلاحية appointments.edit
+// تحديث المواعيد: المالك والمدير والسكرتير أو من لديه صلاحية appointments.edit
 router.put(
   '/:id',
-  authorizePermission('appointments.edit'),
+  authorizePermissionOrRole(
+    ['appointments.edit'],
+    ['مدير', 'مالك', 'سكرتير']
+  ),
   validate(updateAppointmentSchema),
   updateAppointment
 )

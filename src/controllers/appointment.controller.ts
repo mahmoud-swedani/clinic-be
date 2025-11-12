@@ -36,8 +36,11 @@ export const createAppointment = async (req: Request, res: Response) => {
 // باقي دوال الجلب والتعديل والحذف كما في كودك السابق
 export const getAppointmentsByPatient = async (req: Request, res: Response) => {
   try {
+    const userId = req.user?._id?.toString()
     const appointments = await AppointmentService.getAppointmentsByPatient(
-      req.params.patientId
+      req.params.patientId,
+      req.user, // Pass full user object
+      userId
     )
     return sendSuccess(res, appointments)
   } catch (error: any) {
