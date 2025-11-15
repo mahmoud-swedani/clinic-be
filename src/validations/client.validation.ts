@@ -26,7 +26,7 @@ const baselineVitalsSchema = z.object({
   height: z.number().optional(),
 })
 
-export const createPatientSchema = z.object({
+export const createClientSchema = z.object({
   refNumber: z.string().optional(),
   firstName: z.string().min(1, 'الاسم الأول مطلوب'),
   fatherName: z.string().min(1, 'اسم الأب مطلوب'),
@@ -56,9 +56,10 @@ export const createPatientSchema = z.object({
   baselineVitals: baselineVitalsSchema.optional(),
   appointmentAdherence: z.string().optional(),
   improvementNotes: z.string().optional(),
-  patientClassification: z.enum(['regular', 'new', 'chronic', 'VIP']).optional(),
+  clientClassification: z.enum(['regular', 'new', 'chronic', 'VIP']).optional(),
   // Keep old fields for backward compatibility
   medicalHistory: z.string().optional(),
 })
 
-export const updatePatientSchema = createPatientSchema.partial()
+export const updateClientSchema = createClientSchema.partial()
+

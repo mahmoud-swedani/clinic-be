@@ -18,7 +18,7 @@ router.use(protect)
 // إنشاء عملية بيع جديدة
 router.post('/', validate(createSaleSchema), createSale)
 
-// جلب كل عمليات البيع (اختياري فلترة حسب مريض)
+// جلب كل عمليات البيع (اختياري فلترة حسب عميل)
 router.get('/', getSales)
 
 // جلب عملية بيع واحدة حسب الـ ID

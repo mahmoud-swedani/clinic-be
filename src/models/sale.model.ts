@@ -7,7 +7,7 @@ export interface ISaleItem {
 }
 
 export interface ISale extends Document {
-  patient: Types.ObjectId // إشارة للمريض
+  client: Types.ObjectId // إشارة للعميل
   items: ISaleItem[]
   totalAmount: number
   paidAmount: number
@@ -30,7 +30,7 @@ const saleItemSchema = new Schema<ISaleItem>(
 
 const saleSchema = new Schema<ISale>(
   {
-    patient: { type: Schema.Types.ObjectId, ref: 'Patient', required: true },
+    client: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
     items: [saleItemSchema],
     totalAmount: { type: Number, required: true },
     paidAmount: { type: Number, required: true },
@@ -51,7 +51,7 @@ const saleSchema = new Schema<ISale>(
 )
 
 // Database indexes for performance optimization
-saleSchema.index({ patient: 1, createdAt: -1 })
+saleSchema.index({ client: 1, createdAt: -1 })
 saleSchema.index({ paymentStatus: 1 })
 saleSchema.index({ createdAt: -1 })
 

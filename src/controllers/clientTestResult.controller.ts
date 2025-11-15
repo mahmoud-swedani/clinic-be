@@ -1,24 +1,24 @@
-// src/controllers/patientTestResult.controller.ts
+// src/controllers/clientTestResult.controller.ts
 import { Request, Response } from 'express'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
-import { PatientTestResult } from '../models/patientTestResult.model'
-import { Patient } from '../models/patient.model'
+import { ClientTestResult } from '../models/clientTestResult.model'
+import { Client } from '../models/client.model'
 
 // Create test result record
-export const createPatientTestResult = async (req: Request, res: Response) => {
+export const createClientTestResult = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
 
-    // Verify patient exists
-    const patient = await Patient.findById(patientId)
-    if (!patient) {
-      return sendError(res, 'المريض غير موجود', 404)
+    // Verify client exists
+    const client = await Client.findById(clientId)
+    if (!client) {
+      return sendError(res, 'العميل غير موجود', 404)
     }
 
-    const testResult = await PatientTestResult.create({
+    const testResult = await ClientTestResult.create({
       ...req.body,
-      patient: patientId,
+      client: clientId,
     })
 
     return sendSuccess(res, testResult, 'تم إضافة نتيجة الفحص بنجاح', 201)
@@ -32,22 +32,22 @@ export const createPatientTestResult = async (req: Request, res: Response) => {
   }
 }
 
-// Get all test results for a patient
-export const getPatientTestResults = async (req: Request, res: Response) => {
+// Get all test results for a client
+export const getClientTestResults = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
     const { page, limit } = parsePagination(req)
 
     const skip = (page - 1) * limit
 
     const [testResults, total] = await Promise.all([
-      PatientTestResult.find({ patient: patientId })
+      ClientTestResult.find({ client: clientId })
         .populate('doctor', 'name')
         .sort({ testDate: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      PatientTestResult.countDocuments({ patient: patientId }),
+      ClientTestResult.countDocuments({ client: clientId }),
     ])
 
     return sendPaginated(res, testResults, { page, limit, total })
@@ -64,7 +64,7 @@ export const getPatientTestResults = async (req: Request, res: Response) => {
 // Get test result by ID
 export const getTestResultById = async (req: Request, res: Response) => {
   try {
-    const testResult = await PatientTestResult.findById(req.params.id)
+    const testResult = await ClientTestResult.findById(req.params.id)
       .populate('doctor', 'name')
       .lean()
     if (!testResult) {
@@ -84,7 +84,7 @@ export const getTestResultById = async (req: Request, res: Response) => {
 // Update test result
 export const updateTestResult = async (req: Request, res: Response) => {
   try {
-    const testResult = await PatientTestResult.findByIdAndUpdate(
+    const testResult = await ClientTestResult.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
@@ -110,7 +110,7 @@ export const updateTestResult = async (req: Request, res: Response) => {
 // Delete test result
 export const deleteTestResult = async (req: Request, res: Response) => {
   try {
-    const deleted = await PatientTestResult.findByIdAndDelete(req.params.id)
+    const deleted = await ClientTestResult.findByIdAndDelete(req.params.id)
     if (!deleted) {
       return sendError(res, 'نتيجة الفحص غير موجودة', 404)
     }

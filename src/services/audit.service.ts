@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 import { Request } from 'express'
 
 export interface AuditLogData {
-  entityType: 'User' | 'Role' | 'Permission' | 'RolePermission' | 'Appointment' | 'Patient' | 'TreatmentStage'
+  entityType: 'User' | 'Role' | 'Permission' | 'RolePermission' | 'Appointment' | 'Client' | 'TreatmentStage' | 'Invoice'
   entityId: mongoose.Types.ObjectId
   action:
     | 'create'

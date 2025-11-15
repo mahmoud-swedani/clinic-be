@@ -73,13 +73,13 @@ You can manually set these for testing specific resources:
 - `GET /api/user-roles/accountants` - Get accountants
 - `GET /api/user-roles/secretaries` - Get secretaries
 
-### Patients
-- `POST /api/patients` - Create patient
-- `GET /api/patients` - Get all patients
-- `GET /api/patients/:id` - Get patient by ID
-- `PUT /api/patients/:id` - Update patient
-- `DELETE /api/patients/:id` - Delete patient
-- `GET /api/patients/:id/with-appointments` - Get patient with appointments
+### Clients
+- `POST /api/clients` - Create client
+- `GET /api/clients` - Get all clients
+- `GET /api/clients/:id` - Get client by ID
+- `PUT /api/clients/:id` - Update client
+- `DELETE /api/clients/:id` - Delete client
+- `GET /api/clients/:id/with-appointments` - Get client with appointments
 
 ### Appointments
 - `POST /api/appointments` - Create appointment (Manager/Owner only)

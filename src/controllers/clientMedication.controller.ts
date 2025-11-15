@@ -1,24 +1,24 @@
-// src/controllers/patientMedication.controller.ts
+// src/controllers/clientMedication.controller.ts
 import { Request, Response } from 'express'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
-import { PatientMedication } from '../models/patientMedication.model'
-import { Patient } from '../models/patient.model'
+import { ClientMedication } from '../models/clientMedication.model'
+import { Client } from '../models/client.model'
 
 // Create medication record
-export const createPatientMedication = async (req: Request, res: Response) => {
+export const createClientMedication = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
 
-    // Verify patient exists
-    const patient = await Patient.findById(patientId)
-    if (!patient) {
-      return sendError(res, 'المريض غير موجود', 404)
+    // Verify client exists
+    const client = await Client.findById(clientId)
+    if (!client) {
+      return sendError(res, 'العميل غير موجود', 404)
     }
 
-    const medication = await PatientMedication.create({
+    const medication = await ClientMedication.create({
       ...req.body,
-      patient: patientId,
+      client: clientId,
     })
 
     return sendSuccess(res, medication, 'تم إضافة سجل الدواء بنجاح', 201)
@@ -32,21 +32,21 @@ export const createPatientMedication = async (req: Request, res: Response) => {
   }
 }
 
-// Get all medications for a patient
-export const getPatientMedications = async (req: Request, res: Response) => {
+// Get all medications for a client
+export const getClientMedications = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
     const { page, limit } = parsePagination(req)
 
     const skip = (page - 1) * limit
 
     const [medications, total] = await Promise.all([
-      PatientMedication.find({ patient: patientId })
+      ClientMedication.find({ client: clientId })
         .sort({ startDate: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      PatientMedication.countDocuments({ patient: patientId }),
+      ClientMedication.countDocuments({ client: clientId }),
     ])
 
     return sendPaginated(res, medications, { page, limit, total })
@@ -63,7 +63,7 @@ export const getPatientMedications = async (req: Request, res: Response) => {
 // Get medication by ID
 export const getMedicationById = async (req: Request, res: Response) => {
   try {
-    const medication = await PatientMedication.findById(req.params.id).lean()
+    const medication = await ClientMedication.findById(req.params.id).lean()
     if (!medication) {
       return sendError(res, 'سجل الدواء غير موجود', 404)
     }
@@ -81,7 +81,7 @@ export const getMedicationById = async (req: Request, res: Response) => {
 // Update medication
 export const updateMedication = async (req: Request, res: Response) => {
   try {
-    const medication = await PatientMedication.findByIdAndUpdate(
+    const medication = await ClientMedication.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
@@ -105,7 +105,7 @@ export const updateMedication = async (req: Request, res: Response) => {
 // Delete medication
 export const deleteMedication = async (req: Request, res: Response) => {
   try {
-    const deleted = await PatientMedication.findByIdAndDelete(req.params.id)
+    const deleted = await ClientMedication.findByIdAndDelete(req.params.id)
     if (!deleted) {
       return sendError(res, 'سجل الدواء غير موجود', 404)
     }

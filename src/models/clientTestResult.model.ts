@@ -1,8 +1,8 @@
-// src/models/patientTestResult.model.ts
+// src/models/clientTestResult.model.ts
 import mongoose, { Schema, Document } from 'mongoose'
 
-export interface IPatientTestResult extends Document {
-  patient: mongoose.Types.ObjectId
+export interface IClientTestResult extends Document {
+  client: mongoose.Types.ObjectId
   testName: string
   testDate: Date
   results: string
@@ -13,11 +13,11 @@ export interface IPatientTestResult extends Document {
   updatedAt: Date
 }
 
-const patientTestResultSchema = new Schema<IPatientTestResult>(
+const clientTestResultSchema = new Schema<IClientTestResult>(
   {
-    patient: {
+    client: {
       type: Schema.Types.ObjectId,
-      ref: 'Patient',
+      ref: 'Client',
       required: true,
     },
     testName: { type: String, required: true },
@@ -34,12 +34,12 @@ const patientTestResultSchema = new Schema<IPatientTestResult>(
 )
 
 // Database indexes
-patientTestResultSchema.index({ patient: 1 })
-patientTestResultSchema.index({ testDate: -1 })
-patientTestResultSchema.index({ createdAt: -1 })
+clientTestResultSchema.index({ client: 1 })
+clientTestResultSchema.index({ testDate: -1 })
+clientTestResultSchema.index({ createdAt: -1 })
 
-export const PatientTestResult = mongoose.model<IPatientTestResult>(
-  'PatientTestResult',
-  patientTestResultSchema
+export const ClientTestResult = mongoose.model<IClientTestResult>(
+  'ClientTestResult',
+  clientTestResultSchema
 )
 

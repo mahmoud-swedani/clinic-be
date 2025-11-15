@@ -3,11 +3,11 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IPayment extends Document {
-  patient: mongoose.Types.ObjectId
+  client: mongoose.Types.ObjectId
   appointment?: mongoose.Types.ObjectId
   invoice: mongoose.Types.ObjectId
   amount: number
-  method: 'نقدًا' | 'بطاقة'
+  method: 'نقدًا' | 'بطاقة' | 'تحويل بنكي' | 'أخرى'
   date: Date
   receivedBy: mongoose.Types.ObjectId // المحاسب
   createdAt: Date
@@ -16,13 +16,13 @@ export interface IPayment extends Document {
 
 const paymentSchema = new Schema<IPayment>(
   {
-    patient: { type: Schema.Types.ObjectId, ref: 'Patient', required: true },
+    client: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
     appointment: { type: Schema.Types.ObjectId, ref: 'Appointment' },
     invoice: { type: Schema.Types.ObjectId, ref: 'Invoice', required: true },
     amount: { type: Number, required: true },
     method: {
       type: String,
-      enum: ['نقدًا', 'بطاقة'],
+      enum: ['نقدًا', 'بطاقة', 'تحويل بنكي', 'أخرى'],
       required: true,
     },
     date: { type: Date, default: Date.now },
@@ -33,7 +33,7 @@ const paymentSchema = new Schema<IPayment>(
 
 // Database indexes for performance optimization
 paymentSchema.index({ invoice: 1 })
-paymentSchema.index({ patient: 1, date: -1 })
+paymentSchema.index({ client: 1, date: -1 })
 paymentSchema.index({ date: -1 })
 paymentSchema.index({ createdAt: -1 })
 

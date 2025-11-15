@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 
 export interface IAppointment {
-  patient: mongoose.Types.ObjectId
+  client: mongoose.Types.ObjectId
   doctor: mongoose.Types.ObjectId
   date: Date
   type: string
@@ -13,9 +13,9 @@ export interface IAppointment {
 
 const appointmentSchema = new Schema<IAppointment>(
   {
-    patient: {
+    client: {
       type: Schema.Types.ObjectId,
-      ref: 'Patient',
+      ref: 'Client',
       required: true,
     },
     doctor: {
@@ -55,7 +55,7 @@ const appointmentSchema = new Schema<IAppointment>(
 
 // Database indexes for performance optimization
 appointmentSchema.index({ date: 1, status: 1 })
-appointmentSchema.index({ patient: 1, date: -1 })
+appointmentSchema.index({ client: 1, date: -1 })
 appointmentSchema.index({ doctor: 1, date: -1 })
 appointmentSchema.index({ createdAt: -1 })
 

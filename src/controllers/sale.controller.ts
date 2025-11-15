@@ -2,7 +2,7 @@
 import { Request, Response } from 'express'
 import { Sale } from '../models/sale.model'
 import Product from '../models/product.model'
-import { Patient } from '../models/patient.model'
+import { Client } from '../models/client.model'
 import { SalePayment } from '../models/salePayment.model'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
@@ -10,12 +10,12 @@ import { parsePagination } from '../utils/pagination'
 // إنشاء عملية بيع جديدة
 export const createSale = async (req: Request, res: Response) => {
   try {
-    const { patient, items, paidAmount, paymentMethod, notes } = req.body
+    const { client, items, paidAmount, paymentMethod, notes } = req.body
 
-    // التأكد من وجود المريض
-    const foundPatient = await Patient.findById(patient)
-    if (!foundPatient) {
-      return sendError(res, 'المريض غير موجود', 404)
+    // التأكد من وجود العميل
+    const foundClient = await Client.findById(client)
+    if (!foundClient) {
+      return sendError(res, 'العميل غير موجود', 404)
     }
 
     // التحقق من المنتجات وحساب الإجمالي
@@ -52,7 +52,7 @@ export const createSale = async (req: Request, res: Response) => {
 
     // إنشاء السجل
     const sale = await Sale.create({
-      patient,
+      client,
       items,
       totalAmount,
       paidAmount,
@@ -77,17 +77,17 @@ export const createSale = async (req: Request, res: Response) => {
 // جلب كل المبيعات
 export const getSales = async (req: Request, res: Response) => {
   try {
-    const { patient } = req.query
+    const { client } = req.query
     const { page, limit, skip } = parsePagination(req)
 
     const filter: any = {}
-    if (patient) {
-      filter.patient = patient
+    if (client) {
+      filter.client = client
     }
 
     const [sales, total] = await Promise.all([
       Sale.find(filter)
-        .populate('patient', 'fullName phone')
+        .populate('client', 'fullName phone')
         .populate('items.product', 'name sellingPrice')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -113,7 +113,7 @@ export const getSaleById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const sale = await Sale.findById(id)
-      .populate('patient', 'fullName phone')
+      .populate('client', 'fullName phone')
       .populate('items.product', 'name sellingPrice')
       .lean()
     if (!sale) {

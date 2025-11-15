@@ -1,12 +1,12 @@
-// src/routes/patientTestResult.routes.ts
+// src/routes/clientMedication.routes.ts
 import { Router } from 'express'
 import {
-  createPatientTestResult,
-  getPatientTestResults,
-  getTestResultById,
-  updateTestResult,
-  deleteTestResult,
-} from '../controllers/patientTestResult.controller'
+  createClientMedication,
+  getClientMedications,
+  getMedicationById,
+  updateMedication,
+  deleteMedication,
+} from '../controllers/clientMedication.controller'
 import { protect, authorizeRoles } from '../middlewares/auth.middleware'
 
 const router = Router()
@@ -14,39 +14,39 @@ const router = Router()
 // All routes require authentication
 router.use(protect)
 
-// Create test result for a patient
+// Create medication for a client
 router.post(
-  '/patients/:patientId/test-results',
+  '/clients/:clientId/medications',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  createPatientTestResult
+  createClientMedication
 )
 
-// Get all test results for a patient
+// Get all medications for a client
 router.get(
-  '/patients/:patientId/test-results',
+  '/clients/:clientId/medications',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getPatientTestResults
+  getClientMedications
 )
 
-// Get test result by ID
+// Get medication by ID
 router.get(
-  '/test-results/:id',
+  '/medications/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getTestResultById
+  getMedicationById
 )
 
-// Update test result
+// Update medication
 router.put(
-  '/test-results/:id',
+  '/medications/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  updateTestResult
+  updateMedication
 )
 
-// Delete test result
+// Delete medication
 router.delete(
-  '/test-results/:id',
+  '/medications/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب'),
-  deleteTestResult
+  deleteMedication
 )
 
 export default router

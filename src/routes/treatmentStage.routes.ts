@@ -3,7 +3,7 @@
 import express from 'express'
 import {
   createTreatmentStage,
-  getTreatmentStagesByPatient,
+  getTreatmentStagesByClient,
   getTreatmentStagesByAppointment,
   getTreatmentStageById,
   updateTreatmentStage,
@@ -23,17 +23,17 @@ router.post(
   createTreatmentStage
 )
 
-// GET - جلب مراحل مريض
-// Allow users with treatment-stages.view, patients.view, or appointments.view permission
+// GET - جلب مراحل عميل
+// Allow users with treatment-stages.view, clients.view, or appointments.view permission
 // OR users with مالك, طبيب, or مدير roles (fallback for backward compatibility)
 router.get(
-  '/patient/:patientId',
+  '/client/:clientId',
   protect,
   authorizePermissionOrRole(
-    ['treatment-stages.view', 'patients.view', 'appointments.view'],
+    ['treatment-stages.view', 'clients.view', 'appointments.view'],
     ['مالك', 'طبيب', 'مدير']
   ),
-  getTreatmentStagesByPatient
+  getTreatmentStagesByClient
 )
 
 // GET - جلب مراحل علاجية لموعد معين

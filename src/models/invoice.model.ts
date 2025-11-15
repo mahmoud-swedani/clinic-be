@@ -2,7 +2,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IInvoice extends Document {
-  patient: mongoose.Types.ObjectId
+  client: mongoose.Types.ObjectId
   appointment: mongoose.Types.ObjectId
   treatmentStages: mongoose.Types.ObjectId[]
   totalAmount: number
@@ -16,7 +16,7 @@ export interface IInvoice extends Document {
 
 const invoiceSchema = new Schema<IInvoice>(
   {
-    patient: { type: Schema.Types.ObjectId, ref: 'Patient', required: true },
+    client: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
     appointment: {
       type: Schema.Types.ObjectId,
       ref: 'Appointment',
@@ -38,7 +38,7 @@ const invoiceSchema = new Schema<IInvoice>(
 
 // Database indexes for performance optimization
 invoiceSchema.index({ status: 1 })
-invoiceSchema.index({ patient: 1, createdAt: -1 })
+invoiceSchema.index({ client: 1, createdAt: -1 })
 invoiceSchema.index({ createdAt: -1 })
 
 export const Invoice = mongoose.model<IInvoice>('Invoice', invoiceSchema)

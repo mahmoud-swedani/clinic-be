@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const createInvoiceSchema = z.object({
-  patient: z.string().min(1, 'معرف المريض مطلوب'),
+  client: z.string().min(1, 'معرف العميل مطلوب'),
   appointment: z.string().min(1, 'معرف الموعد مطلوب'),
   treatmentStages: z.array(z.string()).optional(),
   totalAmount: z.number().positive('المبلغ الإجمالي يجب أن يكون رقمًا موجبًا'),
@@ -11,7 +11,7 @@ export const createInvoiceSchema = z.object({
 })
 
 export const updateInvoiceSchema = z.object({
-  patient: z.string().min(1, 'معرف المريض مطلوب').optional(),
+  client: z.string().min(1, 'معرف العميل مطلوب').optional(),
   appointment: z.string().min(1, 'معرف الموعد مطلوب').optional(),
   treatmentStages: z.array(z.string()).optional(),
   totalAmount: z.number().positive('المبلغ الإجمالي يجب أن يكون رقمًا موجبًا').optional(),

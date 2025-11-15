@@ -1,4 +1,4 @@
-// src/models/patient.model.ts
+// src/models/client.model.ts
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface IAddress {
@@ -27,7 +27,7 @@ export interface IBaselineVitals {
   height?: number
 }
 
-export interface IPatient extends Document {
+export interface IClient extends Document {
   refNumber: string
   firstName: string
   fatherName: string
@@ -57,7 +57,7 @@ export interface IPatient extends Document {
   baselineVitals?: IBaselineVitals
   appointmentAdherence?: string
   improvementNotes?: string
-  patientClassification: 'regular' | 'new' | 'chronic' | 'VIP'
+  clientClassification: 'regular' | 'new' | 'chronic' | 'VIP'
   createdAt: Date
   updatedAt: Date
 }
@@ -100,7 +100,7 @@ const baselineVitalsSchema = new Schema<IBaselineVitals>(
   { _id: false }
 )
 
-const patientSchema = new Schema<IPatient>(
+const clientSchema = new Schema<IClient>(
   {
     refNumber: { type: String, unique: true, sparse: true },
     firstName: { type: String, required: true },
@@ -134,7 +134,7 @@ const patientSchema = new Schema<IPatient>(
     baselineVitals: { type: baselineVitalsSchema },
     appointmentAdherence: { type: String },
     improvementNotes: { type: String },
-    patientClassification: {
+    clientClassification: {
       type: String,
       enum: ['regular', 'new', 'chronic', 'VIP'],
       default: 'new',
@@ -144,28 +144,28 @@ const patientSchema = new Schema<IPatient>(
 )
 
 // Pre-save hook to auto-generate refNumber
-patientSchema.pre('save', async function (next) {
+clientSchema.pre('save', async function (next) {
   if (!this.refNumber) {
     try {
       // Find the highest refNumber
-      const lastPatient = (await mongoose
-        .model('Patient')
+      const lastClient = (await mongoose
+        .model('Client')
         .findOne({ refNumber: { $exists: true } })
         .sort({ refNumber: -1 })
         .lean()
-        .exec()) as unknown as IPatient | null
+        .exec()) as unknown as IClient | null
 
       let nextNumber = 1
-      if (lastPatient?.refNumber) {
-        // Extract number from PAT-XXX format
-        const match = lastPatient.refNumber.match(/PAT-(\d+)/)
+      if (lastClient?.refNumber) {
+        // Extract number from CLT-XXX format (changed from PAT-XXX)
+        const match = lastClient.refNumber.match(/CLT-(\d+)/)
         if (match) {
           nextNumber = parseInt(match[1], 10) + 1
         }
       }
 
-      // Format as PAT-001, PAT-002, etc.
-      this.refNumber = `PAT-${String(nextNumber).padStart(3, '0')}`
+      // Format as CLT-001, CLT-002, etc. (changed from PAT-XXX)
+      this.refNumber = `CLT-${String(nextNumber).padStart(3, '0')}`
     } catch (error) {
       return next(error as Error)
     }
@@ -180,10 +180,11 @@ patientSchema.pre('save', async function (next) {
 })
 
 // Database indexes for performance optimization
-patientSchema.index({ phone: 1 })
-patientSchema.index({ fullName: 'text' }) // For text search
-patientSchema.index({ createdAt: -1 })
-patientSchema.index({ email: 1 })
-patientSchema.index({ nationalId: 1 })
+clientSchema.index({ phone: 1 })
+clientSchema.index({ fullName: 'text' }) // For text search
+clientSchema.index({ createdAt: -1 })
+clientSchema.index({ email: 1 })
+clientSchema.index({ nationalId: 1 })
 
-export const Patient = mongoose.model<IPatient>('Patient', patientSchema)
+export const Client = mongoose.model<IClient>('Client', clientSchema, 'clients')
+

@@ -1,12 +1,12 @@
-// src/routes/patientMedication.routes.ts
+// src/routes/clientImmunization.routes.ts
 import { Router } from 'express'
 import {
-  createPatientMedication,
-  getPatientMedications,
-  getMedicationById,
-  updateMedication,
-  deleteMedication,
-} from '../controllers/patientMedication.controller'
+  createClientImmunization,
+  getClientImmunizations,
+  getImmunizationById,
+  updateImmunization,
+  deleteImmunization,
+} from '../controllers/clientImmunization.controller'
 import { protect, authorizeRoles } from '../middlewares/auth.middleware'
 
 const router = Router()
@@ -14,39 +14,39 @@ const router = Router()
 // All routes require authentication
 router.use(protect)
 
-// Create medication for a patient
+// Create immunization for a client
 router.post(
-  '/patients/:patientId/medications',
+  '/clients/:clientId/immunizations',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  createPatientMedication
+  createClientImmunization
 )
 
-// Get all medications for a patient
+// Get all immunizations for a client
 router.get(
-  '/patients/:patientId/medications',
+  '/clients/:clientId/immunizations',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getPatientMedications
+  getClientImmunizations
 )
 
-// Get medication by ID
+// Get immunization by ID
 router.get(
-  '/medications/:id',
+  '/immunizations/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getMedicationById
+  getImmunizationById
 )
 
-// Update medication
+// Update immunization
 router.put(
-  '/medications/:id',
+  '/immunizations/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  updateMedication
+  updateImmunization
 )
 
-// Delete medication
+// Delete immunization
 router.delete(
-  '/medications/:id',
+  '/immunizations/:id',
   authorizeRoles('مالك', 'مدير', 'طبيب'),
-  deleteMedication
+  deleteImmunization
 )
 
 export default router

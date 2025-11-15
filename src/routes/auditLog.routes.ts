@@ -5,8 +5,9 @@ import {
   getEntityAuditHistory,
   getUserAuditHistory,
   getAppointmentActivities,
-  getPatientActivities,
+  getClientActivities,
   getTreatmentStageActivities,
+  getInvoiceActivities,
 } from '../controllers/auditLog.controller'
 import { protect, authorizeRoles, authorizeAnyPermission, authorizePermissionOrRole } from '../middlewares/auth.middleware'
 
@@ -36,12 +37,19 @@ router.get(
   getAppointmentActivities
 )
 
-// Get patient activities - allow users with patients.view-activities permission
+// Get client activities - allow users with clients.view-activities permission
+// Also support old patients.* permissions for backward compatibility
 router.get(
-  '/patients/:patientId',
+  '/clients/:clientId',
   protect,
-  authorizeAnyPermission('patients.view-activities', 'patients.view', 'audit-logs.view'),
-  getPatientActivities
+  authorizeAnyPermission(
+    'clients.view-activities',
+    'clients.view',
+    'patients.view-activities', // Backward compatibility
+    'patients.view', // Backward compatibility
+    'audit-logs.view'
+  ),
+  getClientActivities
 )
 
 // Get treatment stage activities - allow users with treatment-stages.view permission
@@ -50,6 +58,14 @@ router.get(
   protect,
   authorizeAnyPermission('treatment-stages.view', 'treatment-stages.view-activities', 'audit-logs.view'),
   getTreatmentStageActivities
+)
+
+// Get invoice activities - allow users with invoices.view permission or audit-logs.view
+router.get(
+  '/invoices/:invoiceId',
+  protect,
+  authorizeAnyPermission('invoices.view', 'audit-logs.view'),
+  getInvoiceActivities
 )
 
 export default router

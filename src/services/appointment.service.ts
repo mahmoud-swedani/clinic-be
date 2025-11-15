@@ -6,24 +6,55 @@ import { getUserRoleName } from './roleLookup.service'
 
 export class AppointmentService {
   /**
-   * Validate doctor exists and is active
+   * Validate user exists and is active
+   * Now accepts any user (not just doctors)
    */
-  static async validateDoctor(doctorId: string) {
-    const doctorUser = await User.findById(doctorId)
+  static async validateDoctor(userId: string) {
+    const user = await User.findById(userId)
       .populate('roleId', 'name')
       .lean()
     
-    if (!doctorUser || !doctorUser.isActive) {
-      throw new Error('الطبيب غير موجود أو غير نشط')
-    }
-
-    // Check if user has doctor role (from database or enum)
-    const userRoleName = getUserRoleName(doctorUser)
-    if (userRoleName !== 'طبيب') {
-      throw new Error('المستخدم ليس لديه صلاحية الطبيب')
+    if (!user || !user.isActive) {
+      throw new Error('المستخدم غير موجود أو غير نشط')
     }
     
-    return doctorUser
+    return user
+  }
+
+  /**
+   * Validate that user belongs to the specified department
+   */
+  static async validateUserBelongsToDepartment(userId: string, departmentId: string) {
+    const user = await User.findById(userId).lean()
+    
+    if (!user) {
+      throw new Error('المستخدم غير موجود')
+    }
+
+    // Manager, Owner, and Reception don't need department assignment
+    const userRoleName = getUserRoleName(user)
+    if (userRoleName === 'مدير' || userRoleName === 'مالك' || userRoleName === 'سكرتير') {
+      return true // These roles can be assigned to any department
+    }
+
+    // Check if user has access to all departments
+    if (user.hasAllDepartments) {
+      return true
+    }
+
+    // Check if user has the department in their departments array
+    const userDepartments = user.departments || []
+    const departmentObjectId = departmentId as any
+    
+    const hasDepartment = userDepartments.some(
+      (deptId) => deptId.toString() === departmentObjectId.toString()
+    )
+
+    if (!hasDepartment) {
+      throw new Error('المستخدم المحدد لا ينتمي إلى القسم المحدد')
+    }
+
+    return true
   }
 
   /**
@@ -52,11 +83,11 @@ export class AppointmentService {
    * Create a new appointment
    */
   static async createAppointment(appointmentData: any) {
-    const { patient, doctor, date, type, notes, service, departmentId } =
+    const { client, doctor, date, type, notes, service, departmentId } =
       appointmentData
 
     // Validate required fields
-    if (!patient || !doctor || !date || !type || !service || !departmentId) {
+    if (!client || !doctor || !date || !type || !service || !departmentId) {
       throw new Error('جميع الحقول مطلوبة')
     }
 
@@ -64,10 +95,13 @@ export class AppointmentService {
     await this.validateDoctor(doctor)
     await this.validateService(service)
     await this.validateDepartment(departmentId)
+    
+    // Validate that user belongs to department
+    await this.validateUserBelongsToDepartment(doctor, departmentId)
 
     // Create appointment
     const appointment = await Appointment.create({
-      patient,
+      client,
       doctor,
       date,
       type,
@@ -78,7 +112,7 @@ export class AppointmentService {
 
     // Populate related fields
     await appointment.populate([
-      { path: 'patient' },
+      { path: 'client' },
       { path: 'doctor' },
       { path: 'service' },
       { path: 'departmentId' },
@@ -88,26 +122,26 @@ export class AppointmentService {
   }
 
   /**
-   * Get appointments by patient ID
+   * Get appointments by client ID
    * Filters by doctor if user role is 'طبيب'
    */
-  static async getAppointmentsByPatient(
-    patientId: string,
+  static async getAppointmentsByClient(
+    clientId: string,
     user?: any,
     userId?: string
   ) {
     // Build filter based on role
-    const filter: any = { patient: patientId }
+    const filter: any = { client: clientId }
     const userRoleName = user ? getUserRoleName(user) : null
     
     if (userRoleName === 'طبيب' && userId) {
-      // Doctors can only see their own appointments for this patient
+      // Doctors can only see their own appointments for this client
       filter.doctor = userId
     }
 
     const appointments = await Appointment.find(filter)
       .sort({ date: -1 })
-      .populate('patient')
+      .populate('client')
       .populate('doctor')
       .populate('service')
       .populate('departmentId')
@@ -138,7 +172,7 @@ export class AppointmentService {
 
     const [appointments, total] = await Promise.all([
       Appointment.find(filter)
-        .populate('patient', '_id fullName')
+        .populate('client', '_id fullName')
         .populate('doctor', '_id name')
         .populate('service', 'name')
         .populate('departmentId', 'name')
@@ -169,7 +203,7 @@ export class AppointmentService {
     }
 
     const appointment = await Appointment.findOne(filter)
-      .populate('patient')
+      .populate('client')
       .populate('doctor')
       .populate('service')
       .populate('departmentId')
@@ -182,9 +216,32 @@ export class AppointmentService {
    * Update appointment by ID
    */
   static async updateAppointment(id: string, updateData: any) {
+    // Validate user belongs to department if both are being updated
+    if (updateData.doctor && updateData.departmentId) {
+      await this.validateUserBelongsToDepartment(updateData.doctor, updateData.departmentId)
+    } else if (updateData.doctor) {
+      // If only doctor is updated, get department from existing appointment
+      const existingAppointment = await Appointment.findById(id).lean()
+      if (existingAppointment?.departmentId) {
+        await this.validateUserBelongsToDepartment(
+          updateData.doctor,
+          existingAppointment.departmentId.toString()
+        )
+      }
+    } else if (updateData.departmentId) {
+      // If only department is updated, get doctor from existing appointment
+      const existingAppointment = await Appointment.findById(id).lean()
+      if (existingAppointment?.doctor) {
+        await this.validateUserBelongsToDepartment(
+          existingAppointment.doctor.toString(),
+          updateData.departmentId
+        )
+      }
+    }
+
     // Get the old appointment data before updating
     const oldAppointment = await Appointment.findById(id)
-      .populate('patient')
+      .populate('client')
       .populate('doctor')
       .populate('service')
       .populate('departmentId')
@@ -193,7 +250,7 @@ export class AppointmentService {
     const updated = await Appointment.findByIdAndUpdate(id, updateData, {
       new: true,
     })
-      .populate('patient')
+      .populate('client')
       .populate('doctor')
       .populate('service')
       .populate('departmentId')
@@ -208,7 +265,7 @@ export class AppointmentService {
   static async deleteAppointment(id: string) {
     // Get the appointment data before deleting
     const appointment = await Appointment.findById(id)
-      .populate('patient')
+      .populate('client')
       .populate('doctor')
       .populate('service')
       .populate('departmentId')

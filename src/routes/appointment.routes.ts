@@ -5,7 +5,7 @@ import {
   getAppointmentById,
   updateAppointment,
   deleteAppointment,
-  getAppointmentsByPatient,
+  getAppointmentsByClient,
 } from '../controllers/appointment.controller'
 import { protect, authorizeRoles, authorizePermission, authorizePermissionOrRole } from '../middlewares/auth.middleware'
 import { validate } from '../middlewares/validate'
@@ -26,14 +26,14 @@ const createAllowedRoles = ['مدير', 'مالك', 'سكرتير']
 const manageAllowedRoles = ['مدير', 'مالك']
 
 // السماح للأطباء بعرض مواعيدهم الخاصة
-// Allow users with patients.view-appointments OR appointments.view permission OR roles: 'مدير', 'مالك', 'طبيب'
+// Allow users with clients.view-appointments OR appointments.view permission OR roles: 'مدير', 'مالك', 'طبيب'
 router.get(
-  '/patient/:patientId',
+  '/client/:clientId',
   authorizePermissionOrRole(
-    ['patients.view-appointments', 'appointments.view'],
+    ['clients.view-appointments', 'appointments.view'],
     ['مدير', 'مالك', 'طبيب']
   ),
-  getAppointmentsByPatient
+  getAppointmentsByClient
 )
 router.get('/', getAllAppointments) // Role filtering handled in controller
 router.get('/:id', getAppointmentById) // Role filtering handled in controller

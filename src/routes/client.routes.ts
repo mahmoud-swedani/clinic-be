@@ -1,14 +1,14 @@
 import { Router } from 'express'
 import {
-  createPatient,
-  getAllPatients,
-  getPatientById,
-  updatePatient,
-  deletePatient,
-  getPatientWithAppointments,
-} from '../controllers/patient.controller'
+  createClient,
+  getAllClients,
+  getClientById,
+  updateClient,
+  deleteClient,
+  getClientWithAppointments,
+} from '../controllers/client.controller'
 import { validate } from '../middlewares/validate'
-import { createPatientSchema } from '../validations/patient.validation'
+import { createClientSchema } from '../validations/client.validation'
 import { protect, authorizeRoles } from '../middlewares/auth.middleware'
 
 const router = Router()
@@ -17,39 +17,40 @@ router.post(
   '/',
   protect,
   authorizeRoles('مالك', 'سكرتير', 'طبيب'),
-  validate(createPatientSchema),
-  createPatient
+  validate(createClientSchema),
+  createClient
 )
 
 router.get(
   '/:id',
   protect,
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getPatientById
+  getClientById
 )
 
 router.put(
   '/:id',
   protect,
   authorizeRoles('مالك', 'سكرتير', 'طبيب'),
-  updatePatient
+  updateClient
 )
 
-// الآن نضيف حماية ومسؤوليات لمسح المريض
-router.delete('/:id', protect, authorizeRoles('مالك', 'مدير'), deletePatient)
+// الآن نضيف حماية ومسؤوليات لمسح العميل
+router.delete('/:id', protect, authorizeRoles('مالك', 'مدير'), deleteClient)
 
 router.get(
   '/',
   protect,
   authorizeRoles('مالك', 'مدير', 'محاسب', 'طبيب', 'سكرتير'),
-  getAllPatients
+  getAllClients
 )
 
 router.get(
   '/:id/with-appointments',
   protect,
   authorizeRoles('مالك', 'مدير', 'طبيب', 'سكرتير'),
-  getPatientWithAppointments
+  getClientWithAppointments
 )
 
 export default router
+

@@ -7,7 +7,7 @@ const saleItemSchema = z.object({
 })
 
 export const createSaleSchema = z.object({
-  patient: z.string().min(1, 'معرف المريض مطلوب'),
+  client: z.string().min(1, 'معرف العميل مطلوب'),
   items: z.array(saleItemSchema).min(1, 'يجب أن يحتوي على منتج واحد على الأقل'),
   totalAmount: z.number().positive('المبلغ الإجمالي يجب أن يكون رقمًا موجبًا'),
   paidAmount: z.number().min(0, 'المبلغ المدفوع يجب أن يكون رقمًا موجبًا'),

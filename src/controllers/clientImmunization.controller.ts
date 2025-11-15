@@ -1,24 +1,24 @@
-// src/controllers/patientImmunization.controller.ts
+// src/controllers/clientImmunization.controller.ts
 import { Request, Response } from 'express'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
-import { PatientImmunization } from '../models/patientImmunization.model'
-import { Patient } from '../models/patient.model'
+import { ClientImmunization } from '../models/clientImmunization.model'
+import { Client } from '../models/client.model'
 
 // Create immunization record
-export const createPatientImmunization = async (req: Request, res: Response) => {
+export const createClientImmunization = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
 
-    // Verify patient exists
-    const patient = await Patient.findById(patientId)
-    if (!patient) {
-      return sendError(res, 'المريض غير موجود', 404)
+    // Verify client exists
+    const client = await Client.findById(clientId)
+    if (!client) {
+      return sendError(res, 'العميل غير موجود', 404)
     }
 
-    const immunization = await PatientImmunization.create({
+    const immunization = await ClientImmunization.create({
       ...req.body,
-      patient: patientId,
+      client: clientId,
     })
 
     return sendSuccess(res, immunization, 'تم إضافة سجل التطعيم بنجاح', 201)
@@ -32,21 +32,21 @@ export const createPatientImmunization = async (req: Request, res: Response) => 
   }
 }
 
-// Get all immunizations for a patient
-export const getPatientImmunizations = async (req: Request, res: Response) => {
+// Get all immunizations for a client
+export const getClientImmunizations = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
     const { page, limit } = parsePagination(req)
 
     const skip = (page - 1) * limit
 
     const [immunizations, total] = await Promise.all([
-      PatientImmunization.find({ patient: patientId })
+      ClientImmunization.find({ client: clientId })
         .sort({ date: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      PatientImmunization.countDocuments({ patient: patientId }),
+      ClientImmunization.countDocuments({ client: clientId }),
     ])
 
     return sendPaginated(res, immunizations, { page, limit, total })
@@ -63,7 +63,7 @@ export const getPatientImmunizations = async (req: Request, res: Response) => {
 // Get immunization by ID
 export const getImmunizationById = async (req: Request, res: Response) => {
   try {
-    const immunization = await PatientImmunization.findById(req.params.id).lean()
+    const immunization = await ClientImmunization.findById(req.params.id).lean()
     if (!immunization) {
       return sendError(res, 'سجل التطعيم غير موجود', 404)
     }
@@ -81,7 +81,7 @@ export const getImmunizationById = async (req: Request, res: Response) => {
 // Update immunization
 export const updateImmunization = async (req: Request, res: Response) => {
   try {
-    const immunization = await PatientImmunization.findByIdAndUpdate(
+    const immunization = await ClientImmunization.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
@@ -105,7 +105,7 @@ export const updateImmunization = async (req: Request, res: Response) => {
 // Delete immunization
 export const deleteImmunization = async (req: Request, res: Response) => {
   try {
-    const deleted = await PatientImmunization.findByIdAndDelete(req.params.id)
+    const deleted = await ClientImmunization.findByIdAndDelete(req.params.id)
     if (!deleted) {
       return sendError(res, 'سجل التطعيم غير موجود', 404)
     }

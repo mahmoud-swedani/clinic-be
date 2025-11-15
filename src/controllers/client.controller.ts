@@ -1,74 +1,74 @@
 import { Request, Response } from 'express'
 import { sendSuccess, sendError, sendPaginated } from '../utils/apiResponse'
 import { parsePagination } from '../utils/pagination'
-import { PatientService } from '../services/patient.service'
+import { ClientService } from '../services/client.service'
 import { AuditService } from '../services/audit.service'
 import mongoose from 'mongoose'
 
-// إنشاء مريض جديد
-export const createPatient = async (req: Request, res: Response) => {
+// إنشاء عميل جديد
+export const createClient = async (req: Request, res: Response) => {
   try {
-    const patient = await PatientService.createPatient(req.body)
+    const client = await ClientService.createClient(req.body)
     const userId = req.user?._id?.toString()
     
     // Log activity
-    if (userId && patient._id) {
+    if (userId && client._id) {
       await AuditService.logCreate(
-        'Patient',
-        patient._id as mongoose.Types.ObjectId,
+        'Client',
+        client._id as mongoose.Types.ObjectId,
         userId as unknown as mongoose.Types.ObjectId,
         req
       )
     }
     
-    return sendSuccess(res, patient, 'تم إنشاء المريض بنجاح', 201)
+    return sendSuccess(res, client, 'تم إنشاء العميل بنجاح', 201)
   } catch (error: any) {
     return sendError(
       res,
-      'فشل في إنشاء المريض',
+      'فشل في إنشاء العميل',
       400,
       error?.message || String(error)
     )
   }
 }
 
-// جلب كل المرضى
-export const getAllPatients = async (req: Request, res: Response) => {
+// جلب كل العملاء
+export const getAllClients = async (req: Request, res: Response) => {
   try {
     const { page, limit } = parsePagination(req)
     const userId = req.user?._id?.toString()
-    const { patients, total } = await PatientService.getAllPatients(
+    const { clients, total } = await ClientService.getAllClients(
       page,
       limit,
       req.user, // Pass full user object
       userId
     )
-    return sendPaginated(res, patients, { page, limit, total })
+    return sendPaginated(res, clients, { page, limit, total })
   } catch (error: any) {
     console.log(error)
     return sendError(
       res,
-      'فشل في جلب المرضى',
+      'فشل في جلب العملاء',
       500,
       error?.message || String(error)
     )
   }
 }
 
-// تفاصيل مريض مع مواعيده
-export const getPatientWithAppointments = async (
+// تفاصيل عميل مع مواعيده
+export const getClientWithAppointments = async (
   req: Request,
   res: Response
 ) => {
   try {
     const userId = req.user?._id?.toString()
-    const result = await PatientService.getPatientWithAppointments(
+    const result = await ClientService.getClientWithAppointments(
       req.params.id,
       req.user, // Pass full user object
       userId
     )
     if (!result) {
-      return sendError(res, 'المريض غير موجود', 404)
+      return sendError(res, 'العميل غير موجود', 404)
     }
     return sendSuccess(res, result)
   } catch (error: any) {
@@ -81,36 +81,36 @@ export const getPatientWithAppointments = async (
   }
 }
 
-export const getPatientById = async (req: Request, res: Response) => {
+export const getClientById = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id?.toString()
-    const patient = await PatientService.getPatientById(
+    const client = await ClientService.getClientById(
       req.params.id,
       req.user, // Pass full user object
       userId
     )
-    if (!patient) {
-      return sendError(res, 'لم يتم العثور على المريض', 404)
+    if (!client) {
+      return sendError(res, 'لم يتم العثور على العميل', 404)
     }
-    return sendSuccess(res, patient)
+    return sendSuccess(res, client)
   } catch (error: any) {
     return sendError(
       res,
-      'فشل في جلب بيانات المريض',
+      'فشل في جلب بيانات العميل',
       500,
       error?.message || String(error)
     )
   }
 }
 
-export const updatePatient = async (req: Request, res: Response) => {
+export const updateClient = async (req: Request, res: Response) => {
   try {
-    const result = await PatientService.updatePatient(req.params.id, req.body)
+    const result = await ClientService.updateClient(req.params.id, req.body)
     if (!result || !result.updated) {
-      return sendError(res, 'لم يتم العثور على المريض', 404)
+      return sendError(res, 'لم يتم العثور على العميل', 404)
     }
     
-    const { updated, oldPatient } = result
+    const { updated, oldClient } = result
     const userId = req.user?._id?.toString()
     
     // Log activity with changes
@@ -121,7 +121,7 @@ export const updatePatient = async (req: Request, res: Response) => {
         after: {},
       }
       
-      // Compare fields - include all patient fields
+      // Compare fields - include all client fields
       const fieldsToCheck = [
         'fullName', 'firstName', 'fatherName', 'lastName', 'phone', 'gender',
         'dateOfBirth', 'refNumber', 'nationalId', 'idNumber', 'passportNumber',
@@ -129,11 +129,11 @@ export const updatePatient = async (req: Request, res: Response) => {
         'primaryReasonForVisit', 'currentMedicalHistory', 'allergies',
         'chronicDiseases', 'previousSurgeries', 'currentMedications',
         'familyHistory', 'dateFileOpening', 'lifestyle', 'bmi', 'baselineVitals',
-        'appointmentAdherence', 'improvementNotes', 'patientClassification'
+        'appointmentAdherence', 'improvementNotes', 'clientClassification'
       ]
       
       fieldsToCheck.forEach((field) => {
-        const oldValue = oldPatient?.[field as keyof typeof oldPatient]
+        const oldValue = oldClient?.[field as keyof typeof oldClient]
         const newValue = updated[field as keyof typeof updated]
         
         // Special handling for date fields
@@ -181,7 +181,7 @@ export const updatePatient = async (req: Request, res: Response) => {
       // Only log if there are actual changes
       if (Object.keys(changes.before).length > 0) {
         await AuditService.logUpdate(
-          'Patient',
+          'Client',
           updated._id as mongoose.Types.ObjectId,
           userId as unknown as mongoose.Types.ObjectId,
           changes,
@@ -190,45 +190,46 @@ export const updatePatient = async (req: Request, res: Response) => {
       }
     }
     
-    return sendSuccess(res, updated, 'تم تحديث بيانات المريض بنجاح')
+    return sendSuccess(res, updated, 'تم تحديث بيانات العميل بنجاح')
   } catch (error: any) {
     return sendError(
       res,
-      'فشل في تحديث بيانات المريض',
+      'فشل في تحديث بيانات العميل',
       500,
       error?.message || String(error)
     )
   }
 }
 
-export const deletePatient = async (req: Request, res: Response) => {
+export const deleteClient = async (req: Request, res: Response) => {
   try {
-    const result = await PatientService.deletePatient(req.params.id)
+    const result = await ClientService.deleteClient(req.params.id)
     if (!result || !result.deleted) {
-      return sendError(res, 'لم يتم العثور على المريض', 404)
+      return sendError(res, 'لم يتم العثور على العميل', 404)
     }
     
-    const { deleted, patient } = result
+    const { deleted, client } = result
     const userId = req.user?._id?.toString()
     
     // Log activity
     if (userId && deleted._id) {
       await AuditService.logDelete(
-        'Patient',
+        'Client',
         deleted._id as mongoose.Types.ObjectId,
         userId as unknown as mongoose.Types.ObjectId,
-        patient,
+        client,
         req
       )
     }
     
-    return sendSuccess(res, null, 'تم حذف المريض بنجاح')
+    return sendSuccess(res, null, 'تم حذف العميل بنجاح')
   } catch (error: any) {
     return sendError(
       res,
-      'فشل في حذف المريض',
+      'فشل في حذف العميل',
       500,
       error?.message || String(error)
     )
   }
 }
+

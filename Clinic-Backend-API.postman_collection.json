@@ -279,10 +279,10 @@
       ]
     },
     {
-      "name": "Patients",
+      "name": "Clients",
       "item": [
         {
-          "name": "Create Patient",
+          "name": "Create Client",
           "request": {
             "method": "POST",
             "header": [
@@ -296,47 +296,47 @@
               "raw": "{\n  \"fullName\": \"محمد أحمد\",\n  \"phone\": \"01234567890\",\n  \"gender\": \"male\",\n  \"dateOfBirth\": \"1990-01-01\",\n  \"address\": \"القاهرة، مصر\",\n  \"medicalHistory\": \"لا توجد أمراض مزمنة\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/patients",
+              "raw": "{{baseUrl}}/api/clients",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients"]
+              "path": ["api", "clients"]
             },
-            "description": "Create a new patient (Owner/Secretary/Doctor only)"
+            "description": "Create a new client (Owner/Secretary/Doctor only)"
           }
         },
         {
-          "name": "Get All Patients",
+          "name": "Get All Clients",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/patients",
+              "raw": "{{baseUrl}}/api/clients",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients"]
+              "path": ["api", "clients"]
             },
-            "description": "Get all patients"
+            "description": "Get all clients"
           }
         },
         {
-          "name": "Get Patient by ID",
+          "name": "Get Client by ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/patients/:id",
+              "raw": "{{baseUrl}}/api/clients/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients", ":id"],
+              "path": ["api", "clients", ":id"],
               "variable": [
                 {
                   "key": "id",
-                  "value": "{{patientId}}"
+                  "value": "{{clientId}}"
                 }
               ]
             },
-            "description": "Get patient by ID"
+            "description": "Get client by ID"
           }
         },
         {
-          "name": "Update Patient",
+          "name": "Update Client",
           "request": {
             "method": "PUT",
             "header": [
@@ -350,55 +350,55 @@
               "raw": "{\n  \"fullName\": \"محمد أحمد محمود\",\n  \"phone\": \"01234567891\",\n  \"address\": \"الإسكندرية، مصر\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/patients/:id",
+              "raw": "{{baseUrl}}/api/clients/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients", ":id"],
+              "path": ["api", "clients", ":id"],
               "variable": [
                 {
                   "key": "id",
-                  "value": "{{patientId}}"
+                  "value": "{{clientId}}"
                 }
               ]
             },
-            "description": "Update patient (Owner/Secretary/Doctor only)"
+            "description": "Update client (Owner/Secretary/Doctor only)"
           }
         },
         {
-          "name": "Delete Patient",
+          "name": "Delete Client",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/patients/:id",
+              "raw": "{{baseUrl}}/api/clients/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients", ":id"],
+              "path": ["api", "clients", ":id"],
               "variable": [
                 {
                   "key": "id",
-                  "value": "{{patientId}}"
+                  "value": "{{clientId}}"
                 }
               ]
             },
-            "description": "Delete patient (Owner/Manager only)"
+            "description": "Delete client (Owner/Manager only)"
           }
         },
         {
-          "name": "Get Patient with Appointments",
+          "name": "Get Client with Appointments",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/patients/:id/with-appointments",
+              "raw": "{{baseUrl}}/api/clients/:id/with-appointments",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "patients", ":id", "with-appointments"],
+              "path": ["api", "clients", ":id", "with-appointments"],
               "variable": [
                 {
                   "key": "id",
-                  "value": "{{patientId}}"
+                  "value": "{{clientId}}"
                 }
               ]
             },
-            "description": "Get patient with their appointments"
+            "description": "Get client with their appointments"
           }
         }
       ]

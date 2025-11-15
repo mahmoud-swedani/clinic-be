@@ -1,8 +1,8 @@
-// src/models/patientMedication.model.ts
+// src/models/clientMedication.model.ts
 import mongoose, { Schema, Document } from 'mongoose'
 
-export interface IPatientMedication extends Document {
-  patient: mongoose.Types.ObjectId
+export interface IClientMedication extends Document {
+  client: mongoose.Types.ObjectId
   medicationName: string
   dosage?: string
   frequency?: string
@@ -14,11 +14,11 @@ export interface IPatientMedication extends Document {
   updatedAt: Date
 }
 
-const patientMedicationSchema = new Schema<IPatientMedication>(
+const clientMedicationSchema = new Schema<IClientMedication>(
   {
-    patient: {
+    client: {
       type: Schema.Types.ObjectId,
-      ref: 'Patient',
+      ref: 'Client',
       required: true,
     },
     medicationName: { type: String, required: true },
@@ -33,12 +33,12 @@ const patientMedicationSchema = new Schema<IPatientMedication>(
 )
 
 // Database indexes
-patientMedicationSchema.index({ patient: 1 })
-patientMedicationSchema.index({ startDate: -1 })
-patientMedicationSchema.index({ createdAt: -1 })
+clientMedicationSchema.index({ client: 1 })
+clientMedicationSchema.index({ startDate: -1 })
+clientMedicationSchema.index({ createdAt: -1 })
 
-export const PatientMedication = mongoose.model<IPatientMedication>(
-  'PatientMedication',
-  patientMedicationSchema
+export const ClientMedication = mongoose.model<IClientMedication>(
+  'ClientMedication',
+  clientMedicationSchema
 )
 

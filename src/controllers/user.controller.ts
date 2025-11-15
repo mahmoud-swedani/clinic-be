@@ -8,6 +8,23 @@ import { AuditService } from '../services/audit.service'
 export const createUser = async (req: Request, res: Response) => {
   try {
     const userData = { ...req.body }
+    const role = userData.role || 'سكرتير'
+    
+    // For manager, owner, and reception (سكرتير), clear departments
+    if (role === 'مدير' || role === 'مالك' || role === 'سكرتير') {
+      userData.departments = []
+      userData.hasAllDepartments = false
+    } else {
+      // For other roles (طبيب, محاسب), ensure departments or hasAllDepartments is set
+      if (!userData.hasAllDepartments && (!userData.departments || userData.departments.length === 0)) {
+        return sendError(
+          res,
+          'يجب تعيين قسم واحد على الأقل أو تفعيل خيار "جميع الأقسام" للمستخدمين من نوع طبيب أو محاسب',
+          400
+        )
+      }
+    }
+    
     // Set createdBy from authenticated user
     if (req.user?._id) {
       userData.createdBy = req.user._id
@@ -84,6 +101,32 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     const updateData = { ...req.body }
+    const role = updateData.role || existingUser.role
+    
+    // For manager, owner, and reception (سكرتير), clear departments
+    if (role === 'مدير' || role === 'مالك' || role === 'سكرتير') {
+      updateData.departments = []
+      updateData.hasAllDepartments = false
+    } else {
+      // For other roles (طبيب, محاسب), ensure departments or hasAllDepartments is set
+      // Only validate if departments are being updated or role is being changed
+      if (updateData.departments !== undefined || updateData.role !== undefined) {
+        if (!updateData.hasAllDepartments && (!updateData.departments || updateData.departments.length === 0)) {
+          // Check if existing user has departments
+          const existingHasDepartments = existingUser.hasAllDepartments || 
+            (Array.isArray(existingUser.departments) && existingUser.departments.length > 0)
+          
+          if (!existingHasDepartments) {
+            return sendError(
+              res,
+              'يجب تعيين قسم واحد على الأقل أو تفعيل خيار "جميع الأقسام" للمستخدمين من نوع طبيب أو محاسب',
+              400
+            )
+          }
+        }
+      }
+    }
+    
     // Set updatedBy from authenticated user
     if (req.user?._id) {
       updateData.updatedBy = req.user._id
@@ -93,6 +136,7 @@ export const updateUser = async (req: Request, res: Response) => {
       new: true,
     })
       .populate('branch')
+      .populate('departments')
       .lean()
 
     // Log audit
@@ -245,6 +289,43 @@ export const getSecretaries = async (req: Request, res: Response) => {
     return sendError(
       res,
       'حدث خطأ أثناء جلب السكرتيرين',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
+// عرض جميع المستخدمين في قسم معين
+export const getUsersByDepartment = async (req: Request, res: Response) => {
+  try {
+    const { departmentId } = req.params
+    
+    if (!departmentId) {
+      return sendError(res, 'معرف القسم مطلوب', 400)
+    }
+
+    // Find users who:
+    // 1. Have hasAllDepartments = true, OR
+    // 2. Have the departmentId in their departments array
+    // 3. Are active
+    // 4. Are not manager, owner, or reception (they don't need departments)
+    const users = await User.find({
+      isActive: true,
+      role: { $nin: ['مدير', 'مالك', 'سكرتير'] },
+      $or: [
+        { hasAllDepartments: true },
+        { departments: departmentId },
+      ],
+    })
+      .select('_id name email role branch')
+      .populate('branch', 'name')
+      .lean()
+
+    return sendSuccess(res, users)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'حدث خطأ أثناء جلب المستخدمين',
       500,
       error?.message || String(error)
     )

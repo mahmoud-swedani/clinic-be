@@ -9,6 +9,8 @@ export interface IUser extends Document {
   role: 'سكرتير' | 'طبيب' | 'محاسب' | 'مدير' | 'مالك' // Kept for backward compatibility
   roleId?: mongoose.Types.ObjectId // New reference to Role model
   branch: mongoose.Types.ObjectId
+  departments?: mongoose.Types.ObjectId[] // Array of department ObjectIds
+  hasAllDepartments?: boolean // Flag to indicate user has access to all departments
   isActive: boolean
   createdBy?: mongoose.Types.ObjectId
   updatedBy?: mongoose.Types.ObjectId
@@ -47,6 +49,15 @@ const userSchema = new Schema<IUser>(
       ref: 'Branch',
       required: true,
     },
+    departments: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Department',
+      default: [],
+    },
+    hasAllDepartments: {
+      type: Boolean,
+      default: false,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -78,6 +89,8 @@ userSchema.index({ role: 1 })
 userSchema.index({ roleId: 1 })
 userSchema.index({ deletedAt: 1 })
 userSchema.index({ createdBy: 1 })
+userSchema.index({ departments: 1 })
+userSchema.index({ hasAllDepartments: 1 })
 
 // تشفير كلمة السر قبل الحفظ
 userSchema.pre('save', async function (next) {

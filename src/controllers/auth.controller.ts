@@ -19,6 +19,11 @@ export const login = async (req: Request, res: Response) => {
       return sendError(res, 'كلمة المرور غير صحيحة', 401)
     }
 
+    // Get user permissions immediately after authentication
+    const userPermissions = await AuthorizationService.getUserPermissions(
+      user._id.toString()
+    )
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET!,
@@ -46,6 +51,7 @@ export const login = async (req: Request, res: Response) => {
           email: user.email,
           role: user.role,
           branch: user.branch,
+          permissions: userPermissions,
         },
       },
       'تم تسجيل الدخول بنجاح'

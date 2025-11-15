@@ -70,12 +70,12 @@ export class InvoiceService {
         ]),
       ])
 
-      // Populate patient and other fields separately
+      // Populate client and other fields separately
       const invoiceIds = invoices.map((inv) => inv._id)
       const populatedInvoices = await Invoice.find({
         _id: { $in: invoiceIds },
       })
-        .populate('patient', 'fullName')
+        .populate('client', 'fullName')
         .populate('appointment', 'date')
         .populate('treatmentStages', 'title cost')
         .sort({ createdAt: -1 })
@@ -89,7 +89,7 @@ export class InvoiceService {
       // No filter for non-doctors
       const [invoices, total] = await Promise.all([
         Invoice.find(baseFilter)
-          .populate('patient', 'fullName')
+          .populate('client', 'fullName')
           .populate('appointment', 'date')
           .populate('treatmentStages', 'title cost')
           .sort({ createdAt: -1 })
@@ -161,12 +161,12 @@ export class InvoiceService {
         ]),
       ])
 
-      // Populate patient separately
+      // Populate client separately
       const invoiceIds = invoices.map((inv) => inv._id)
       const populatedInvoices = await Invoice.find({
         _id: { $in: invoiceIds },
       })
-        .populate('patient', 'fullName')
+        .populate('client', 'fullName')
         .sort({ createdAt: -1 })
         .lean()
 
@@ -178,7 +178,7 @@ export class InvoiceService {
       // No filter for non-doctors
       const [invoices, total] = await Promise.all([
         Invoice.find()
-          .populate('patient', 'fullName')
+          .populate('client', 'fullName')
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit)
@@ -186,6 +186,49 @@ export class InvoiceService {
         Invoice.countDocuments(),
       ])
       return { invoices, total }
+    }
+  }
+
+  /**
+   * Get invoice by ID with role-based access control
+   */
+  static async getInvoiceById(id: string, user?: any, userId?: string) {
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    if (userRoleName === 'طبيب' && userId) {
+      // For doctors, verify the invoice belongs to their appointments
+      const invoice = await Invoice.findById(id)
+        .populate('client', 'fullName phone')
+        .populate('appointment', 'date doctor')
+        .populate('treatmentStages', 'title cost')
+        .populate('createdBy', 'name')
+        .lean()
+
+      if (!invoice) {
+        return null
+      }
+
+      // Check if appointment exists and doctor matches
+      const appointment = invoice.appointment as any
+      if (
+        appointment &&
+        appointment.doctor &&
+        appointment.doctor.toString() !== userId
+      ) {
+        return null // Doctor doesn't have access to this invoice
+      }
+
+      return invoice
+    } else {
+      // For non-doctors, return invoice directly
+      const invoice = await Invoice.findById(id)
+        .populate('client', 'fullName phone')
+        .populate('appointment', 'date doctor')
+        .populate('treatmentStages', 'title cost')
+        .populate('createdBy', 'name')
+        .lean()
+
+      return invoice
     }
   }
 }

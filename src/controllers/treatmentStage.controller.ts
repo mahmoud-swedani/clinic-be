@@ -16,7 +16,7 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
   try {
     const stage = await TreatmentStage.create(req.body)
 
-    const { patient, appointment, cost } = stage
+    const { client, appointment, cost } = stage
     const userId = req.user?._id?.toString() || req.user?.id // MongoDB uses _id
     // المستخدم الذي أضاف المرحلة (طبيب)
 
@@ -34,18 +34,37 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
       return sendSuccess(res, stage, 'تم إنشاء المرحلة بنجاح', 201)
     }
 
-    // تحقق هل توجد فاتورة حالية لنفس المريض والموعد
-    let invoice = await Invoice.findOne({ patient, appointment })
+    // تحقق هل توجد فاتورة حالية لنفس العميل والموعد
+    let invoice = await Invoice.findOne({ client, appointment })
+
+    const invoiceBeforeUpdate = invoice ? { ...invoice.toObject() } : null
 
     if (invoice) {
       // أضف المرحلة إلى الفاتورة الحالية
       invoice.treatmentStages.push(stage._id as any)
       invoice.totalAmount += cost
-      invoice.remainingAmount += cost
+      
+      // Recalculate invoice status based on new amounts
+      // Ensure paidAmount is initialized
+      if (!invoice.paidAmount && invoice.paidAmount !== 0) {
+        invoice.paidAmount = 0
+      }
+      
+      // Recalculate remaining amount and status
+      invoice.remainingAmount = invoice.totalAmount - invoice.paidAmount
+      
+      if (invoice.paidAmount >= invoice.totalAmount) {
+        invoice.status = 'مدفوعة بالكامل'
+        invoice.remainingAmount = 0
+      } else if (invoice.paidAmount > 0) {
+        invoice.status = 'مدفوعة جزئيًا'
+      } else {
+        invoice.status = 'غير مدفوعة'
+      }
     } else {
       // أنشئ فاتورة جديدة
       invoice = await Invoice.create({
-        patient,
+        client,
         appointment,
         treatmentStages: [stage._id as any],
         totalAmount: cost,
@@ -54,9 +73,43 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
         status: 'غير مدفوعة',
         createdBy: userId,
       })
+      
+      // Log audit event for invoice creation
+      if (userId) {
+        await AuditService.logCreate(
+          'Invoice',
+          invoice._id as mongoose.Types.ObjectId,
+          userId as unknown as mongoose.Types.ObjectId,
+          req
+        )
+      }
     }
 
     await invoice.save()
+
+    // Log audit event for invoice update (if invoice existed before)
+    if (invoiceBeforeUpdate && userId) {
+      await AuditService.logUpdate(
+        'Invoice',
+        invoice._id as mongoose.Types.ObjectId,
+        userId as unknown as mongoose.Types.ObjectId,
+        {
+          before: {
+            totalAmount: invoiceBeforeUpdate.totalAmount,
+            remainingAmount: invoiceBeforeUpdate.remainingAmount,
+            status: invoiceBeforeUpdate.status,
+            treatmentStages: invoiceBeforeUpdate.treatmentStages,
+          },
+          after: {
+            totalAmount: invoice.totalAmount,
+            remainingAmount: invoice.remainingAmount,
+            status: invoice.status,
+            treatmentStages: invoice.treatmentStages,
+          },
+        },
+        req
+      )
+    }
 
     // Log audit event for treatment stage creation
     if (userId) {
@@ -83,49 +136,49 @@ export const createTreatmentStage = async (req: Request, res: Response) => {
     )
   }
 }
-// 📄 الحصول على كل المراحل لمريض
-export const getTreatmentStagesByPatient = async (
+// 📄 الحصول على كل المراحل لعميل
+export const getTreatmentStagesByClient = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const patientId = req.params.patientId
+    const clientId = req.params.clientId
     const userId = req.user?._id?.toString()
     const user = req.user
 
     // Build filter for treatment stages
-    const stageFilter: any = { patient: patientId }
+    const stageFilter: any = { client: clientId }
     const userRoleName = user ? getUserRoleName(user) : null
 
     // If user is a doctor, only show treatment stages where doctor = userId
     if (userRoleName === 'طبيب' && userId) {
       stageFilter.doctor = userId
 
-      // Verify doctor has at least one appointment with this patient
+      // Verify doctor has at least one appointment with this client
       const hasAppointment = await Appointment.findOne({
-        patient: patientId,
+        client: clientId,
         doctor: userId,
       }).lean()
 
       if (!hasAppointment) {
-        // Doctor doesn't have any appointments with this patient
-        return sendError(res, 'لا يمكن الوصول إلى بيانات هذا المريض', 403)
+        // Doctor doesn't have any appointments with this client
+        return sendError(res, 'لا يمكن الوصول إلى بيانات هذا العميل', 403)
       }
     }
 
-    // 1. جلب مراحل العلاج للمريض مع بيانات الطبيب، الموعد، والمريض
+    // 1. جلب مراحل العلاج للعميل مع بيانات الطبيب، الموعد، والعميل
     const stages = await TreatmentStage.find(stageFilter)
       .populate('doctor', 'name')
       .populate('appointment')
-      .populate('patient', 'name')
+      .populate('client', 'name')
       .lean()
 
-    // 2. جلب المبيعات المرتبطة بالمريض
-    const sales = await Sale.find({ patient: patientId })
+    // 2. جلب المبيعات المرتبطة بالعميل
+    const sales = await Sale.find({ client: clientId })
       .populate('items.product', 'name price')
       .lean()
 
-    // 3. جلب دفعات الدفع المرتبطة بكل عملية بيع للمريض
+    // 3. جلب دفعات الدفع المرتبطة بكل عملية بيع للعميل
     // - ناخد جميع الـ saleIds الموجودة في sales
     const saleIds = sales.map((sale) => sale._id)
 
@@ -178,7 +231,7 @@ export const getTreatmentStageById = async (req: Request, res: Response) => {
     const stage = await TreatmentStage.findOne(filter)
       .populate('doctor', 'name email')
       .populate('appointment')
-      .populate('patient', 'fullName phone')
+      .populate('client', 'fullName phone')
       .lean()
 
     if (!stage) {
@@ -226,7 +279,7 @@ export const updateTreatmentStage = async (req: Request, res: Response) => {
     )
       .populate('doctor', 'name')
       .populate('appointment')
-      .populate('patient', 'fullName')
+      .populate('client', 'fullName')
       .lean()
 
     if (!stage) {
@@ -338,7 +391,7 @@ export const getTreatmentStagesByAppointment = async (
     const stages = await TreatmentStage.find(stageFilter)
       .populate('doctor', 'name')
       .populate('appointment')
-      .populate('patient', 'fullName')
+      .populate('client', 'fullName')
       .sort({ createdAt: -1 })
       .lean()
 
@@ -372,7 +425,7 @@ export const getAllTreatmentStages = async (req: Request, res: Response) => {
       TreatmentStage.find(filter)
         .populate('doctor', 'name')
         .populate('appointment')
-        .populate('patient', 'name') // ⬅️ هذا يضيف اسم المريض فقط
+        .populate('client', 'name') // ⬅️ هذا يضيف اسم العميل فقط
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

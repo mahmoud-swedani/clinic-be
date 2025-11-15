@@ -34,11 +34,11 @@ export const createAppointment = async (req: Request, res: Response) => {
 }
 
 // باقي دوال الجلب والتعديل والحذف كما في كودك السابق
-export const getAppointmentsByPatient = async (req: Request, res: Response) => {
+export const getAppointmentsByClient = async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id?.toString()
-    const appointments = await AppointmentService.getAppointmentsByPatient(
-      req.params.patientId,
+    const appointments = await AppointmentService.getAppointmentsByClient(
+      req.params.clientId,
       req.user, // Pass full user object
       userId
     )
@@ -120,7 +120,7 @@ export const updateAppointment = async (req: Request, res: Response) => {
       }
       
       // Compare fields
-      const fieldsToCheck = ['patient', 'doctor', 'date', 'type', 'status', 'notes', 'service', 'departmentId']
+      const fieldsToCheck = ['client', 'doctor', 'date', 'type', 'status', 'notes', 'service', 'departmentId']
       fieldsToCheck.forEach((field) => {
         const oldValue = oldAppointment?.[field as keyof typeof oldAppointment]
         const newValue = updated[field as keyof typeof updated]

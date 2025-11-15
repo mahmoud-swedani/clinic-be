@@ -3,7 +3,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
 export interface ITreatmentStage extends Document {
-  patient: mongoose.Types.ObjectId
+  client: mongoose.Types.ObjectId
   title: string
   description?: string
   date: Date
@@ -17,9 +17,9 @@ export interface ITreatmentStage extends Document {
 
 const treatmentStageSchema = new Schema<ITreatmentStage>(
   {
-    patient: {
+    client: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Patient',
+      ref: 'Client',
       required: true,
     },
     title: { type: String, required: true },
@@ -43,7 +43,7 @@ const treatmentStageSchema = new Schema<ITreatmentStage>(
 )
 
 // Database indexes for performance optimization
-treatmentStageSchema.index({ patient: 1, date: -1 })
+treatmentStageSchema.index({ client: 1, date: -1 })
 treatmentStageSchema.index({ doctor: 1 })
 treatmentStageSchema.index({ isCompleted: 1 })
 treatmentStageSchema.index({ createdAt: -1 })

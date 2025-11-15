@@ -1,7 +1,7 @@
 import { User } from '../models/user.model'
 import { TreatmentStage } from '../models/treatmentStage.model'
 import { Payment } from '../models/payment.model'
-import { Patient } from '../models/patient.model'
+import { Client } from '../models/client.model'
 import { Invoice } from '../models/invoice.model'
 import { Branch } from '../models/branch.model'
 import { Appointment } from '../models/appointment.model'
@@ -39,7 +39,7 @@ export class DashboardService {
 
     // Parallel queries for better performance
     const [
-      totalPatients,
+      totalClients,
       totalAppointments,
       totalUsers,
       totalBranches,
@@ -56,7 +56,7 @@ export class DashboardService {
       recentInvoices,
     ] = await Promise.all([
       // Count queries
-      Patient.countDocuments(branchFilter),
+      Client.countDocuments(branchFilter),
       Appointment.countDocuments(branchFilter),
       User.countDocuments(branchFilter),
       Branch.countDocuments(),
@@ -106,20 +106,20 @@ export class DashboardService {
       Appointment.find(branchFilter)
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate('patient', 'fullName')
+        .populate('client', 'fullName')
         .populate('doctor', 'name')
         .lean(),
 
       Payment.find(branchFilter)
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate('patient', 'fullName')
+        .populate('client', 'fullName')
         .lean(),
 
       Invoice.find(branchFilter)
         .sort({ createdAt: -1 })
         .limit(5)
-        .populate('patient', 'fullName')
+        .populate('client', 'fullName')
         .lean(),
     ])
 
@@ -140,20 +140,20 @@ export class DashboardService {
       ...recentAppointments.map((app: any) => ({
         type: 'appointment',
         description: 'موعد جديد',
-        name: app.patient?.fullName || 'مريض غير معروف',
+        name: app.client?.fullName || 'عميل غير معروف',
         time: app.createdAt,
       })),
       ...recentPayments.map((p: any) => ({
         type: 'payment',
         description: 'دفعة مالية',
-        name: p.patient?.fullName || 'مريض غير معروف',
+        name: p.client?.fullName || 'عميل غير معروف',
         amount: p.amount,
         time: p.createdAt,
       })),
       ...recentInvoices.map((inv: any) => ({
         type: 'invoice',
         description: 'فاتورة جديدة',
-        name: inv.patient?.fullName || 'مريض غير معروف',
+        name: inv.client?.fullName || 'عميل غير معروف',
         total: inv.totalAmount,
         time: inv.createdAt,
       })),
@@ -161,7 +161,7 @@ export class DashboardService {
 
     return {
       stats: {
-        totalPatients,
+        totalClients,
         totalAppointments,
         totalUsers,
         totalBranches,

@@ -10,7 +10,7 @@ import logger from './utils/logger'
 // استيراد المسارات
 import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
-import patientRoutes from './routes/patient.routes'
+import clientRoutes from './routes/client.routes'
 import appointmentRoutes from './routes/appointment.routes'
 import branchRoutes from './routes/branch.routes'
 import treatmentStageRoutes from './routes/treatmentStage.routes'
@@ -28,9 +28,9 @@ import permissionRoutes from './routes/permission.routes'
 import rolePermissionRoutes from './routes/rolePermission.routes'
 import userRoleRoutes from './routes/userRole.routes'
 import auditLogRoutes from './routes/auditLog.routes'
-import patientMedicationRoutes from './routes/patientMedication.routes'
-import patientImmunizationRoutes from './routes/patientImmunization.routes'
-import patientTestResultRoutes from './routes/patientTestResult.routes'
+import clientMedicationRoutes from './routes/clientMedication.routes'
+import clientImmunizationRoutes from './routes/clientImmunization.routes'
+import clientTestResultRoutes from './routes/clientTestResult.routes'
 
 const app = express()
 
@@ -128,10 +128,10 @@ app.use('/api', apiLimiter)
 // تعريف المسارات
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
-app.use('/api/patients', patientRoutes)
-app.use('/api', patientMedicationRoutes)
-app.use('/api', patientImmunizationRoutes)
-app.use('/api', patientTestResultRoutes)
+app.use('/api/clients', clientRoutes)
+app.use('/api', clientMedicationRoutes)
+app.use('/api', clientImmunizationRoutes)
+app.use('/api', clientTestResultRoutes)
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/branches', branchRoutes)
 app.use('/api/treatment-stages', treatmentStageRoutes)

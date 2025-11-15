@@ -6,6 +6,7 @@ import {
   updateUser,
   deleteUser,
   toggleUserStatus,
+  getUsersByDepartment,
 } from '../controllers/user.controller'
 import { protect, authorizeRoles } from '../middlewares/auth.middleware'
 import { validate } from '../middlewares/validate'
@@ -22,6 +23,7 @@ router.post(
   createUser
 )
 router.get('/', protect, authorizeRoles('مدير', 'مالك'), getAllUsers)
+router.get('/by-department/:departmentId', protect, getUsersByDepartment)
 router.get('/:id', protect, authorizeRoles('مدير', 'مالك'), getUserById)
 router.put(
   '/:id',

@@ -121,17 +121,17 @@ export const getAppointmentActivities = async (req: Request, res: Response) => {
   }
 }
 
-// Get patient activities
-export const getPatientActivities = async (req: Request, res: Response) => {
+// Get client activities
+export const getClientActivities = async (req: Request, res: Response) => {
   try {
-    const { patientId } = req.params
+    const { clientId } = req.params
     const limit = req.query.limit
       ? parseInt(req.query.limit as string)
       : 50
 
     const logs = await AuditService.getEntityAuditHistory(
-      'Patient',
-      patientId,
+      'Client',
+      clientId,
       limit
     )
 
@@ -139,7 +139,7 @@ export const getPatientActivities = async (req: Request, res: Response) => {
   } catch (error: any) {
     return sendError(
       res,
-      'فشل في جلب سجل أنشطة المريض',
+      'فشل في جلب سجل أنشطة العميل',
       500,
       error?.message || String(error)
     )
@@ -165,6 +165,31 @@ export const getTreatmentStageActivities = async (req: Request, res: Response) =
     return sendError(
       res,
       'فشل في جلب سجل أنشطة المرحلة العلاجية',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
+// Get invoice activities
+export const getInvoiceActivities = async (req: Request, res: Response) => {
+  try {
+    const { invoiceId } = req.params
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string)
+      : 50
+
+    const logs = await AuditService.getEntityAuditHistory(
+      'Invoice',
+      invoiceId,
+      limit
+    )
+
+    return sendSuccess(res, logs)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب سجل أنشطة الفاتورة',
       500,
       error?.message || String(error)
     )

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const createAppointmentSchema = z.object({
-  patient: z.string().min(1, 'معرف المريض مطلوب'),
+  client: z.string().min(1, 'معرف العميل مطلوب'),
   doctor: z.string().min(1, 'معرف الطبيب مطلوب'),
   date: z.string().or(z.date()),
   type: z.string().min(1, 'نوع الموعد مطلوب'),
@@ -12,7 +12,7 @@ export const createAppointmentSchema = z.object({
 })
 
 export const updateAppointmentSchema = z.object({
-  patient: z.string().min(1, 'معرف المريض مطلوب').optional(),
+  client: z.string().min(1, 'معرف العميل مطلوب').optional(),
   doctor: z.string().min(1, 'معرف الطبيب مطلوب').optional(),
   date: z.string().or(z.date()).optional(),
   type: z.string().min(1, 'نوع الموعد مطلوب').optional(),

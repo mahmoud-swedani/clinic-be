@@ -1,6 +1,6 @@
 // src/services/analytics.service.ts
 import mongoose from 'mongoose'
-import { Patient } from '../models/patient.model'
+import { Client } from '../models/client.model'
 import { Appointment } from '../models/appointment.model'
 import { Payment } from '../models/payment.model'
 import { Invoice } from '../models/invoice.model'
@@ -74,7 +74,7 @@ export class AnalyticsService {
 
     // Parallel queries for all metrics
     const [
-      totalPatients,
+      totalClients,
       totalAppointments,
       totalRevenue,
       totalExpenses,
@@ -85,7 +85,7 @@ export class AnalyticsService {
       expensesByDate,
     ] = await Promise.all([
       // Counts
-      Patient.countDocuments(baseFilter),
+      Client.countDocuments(baseFilter),
       Appointment.countDocuments(baseFilter),
 
       // Financial aggregations
@@ -169,7 +169,7 @@ export class AnalyticsService {
 
     return {
       summary: {
-        totalPatients,
+        totalClients,
         totalAppointments,
         totalRevenue: totalRevenueValue,
         totalExpenses: totalExpensesValue,
