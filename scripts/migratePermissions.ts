@@ -133,6 +133,11 @@ const PERMISSIONS = [
     description: 'حذف الفواتير',
     category: 'financial',
   },
+  {
+    name: 'invoices.view-activities',
+    description: 'عرض سجل الأنشطة للفواتير',
+    category: 'financial',
+  },
   // Payments
   {
     name: 'payments.view',

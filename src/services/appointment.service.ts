@@ -1,4 +1,5 @@
 import { Appointment } from '../models/appointment.model'
+import { AppointmentService } from '../models/appointmentService.model'
 import { User } from '../models/user.model'
 import Service from '../models/services.model'
 import { Department } from '../models/departments.model'
@@ -80,35 +81,80 @@ export class AppointmentService {
   }
 
   /**
+   * Validate all services belong to the same department
+   */
+  static async validateServicesBelongToDepartment(serviceIds: string[], departmentId: string) {
+    const services = await Service.find({ _id: { $in: serviceIds } }).lean()
+    
+    if (services.length !== serviceIds.length) {
+      throw new Error('بعض الخدمات المختارة غير موجودة')
+    }
+
+    const invalidServices = services.filter(
+      (service) => service.departmentId.toString() !== departmentId.toString()
+    )
+
+    if (invalidServices.length > 0) {
+      throw new Error('جميع الخدمات يجب أن تنتمي إلى نفس القسم')
+    }
+
+    return true
+  }
+
+  /**
    * Create a new appointment
+   * Now supports multiple services via services array
    */
   static async createAppointment(appointmentData: any) {
-    const { client, doctor, date, type, notes, service, departmentId } =
+    const { client, doctor, date, type, notes, service, services, departmentId } =
       appointmentData
 
+    // Support both old (service) and new (services) format for backward compatibility
+    const serviceIds = services && Array.isArray(services) && services.length > 0
+      ? services
+      : service
+        ? [service]
+        : []
+
     // Validate required fields
-    if (!client || !doctor || !date || !type || !service || !departmentId) {
+    if (!client || !doctor || !date || !type || serviceIds.length === 0 || !departmentId) {
       throw new Error('جميع الحقول مطلوبة')
     }
 
     // Validate related entities
     await this.validateDoctor(doctor)
-    await this.validateService(service)
     await this.validateDepartment(departmentId)
     
     // Validate that user belongs to department
     await this.validateUserBelongsToDepartment(doctor, departmentId)
 
-    // Create appointment
+    // Validate all services exist and belong to the same department
+    for (const serviceId of serviceIds) {
+      await this.validateService(serviceId)
+    }
+    await this.validateServicesBelongToDepartment(serviceIds, departmentId)
+
+    // Create appointment (keep service field for backward compatibility during migration)
     const appointment = await Appointment.create({
       client,
       doctor,
       date,
       type,
       notes,
-      service,
+      service: serviceIds[0], // Keep first service for backward compatibility
       departmentId,
     })
+
+    // Create AppointmentService entries for each service
+    const appointmentServices = []
+    for (let i = 0; i < serviceIds.length; i++) {
+      const appointmentService = await AppointmentService.create({
+        appointment: appointment._id,
+        service: serviceIds[i],
+        order: i,
+      })
+      appointmentServices.push(appointmentService)
+    }
 
     // Populate related fields
     await appointment.populate([
@@ -118,7 +164,19 @@ export class AppointmentService {
       { path: 'departmentId' },
     ])
 
-    return appointment
+    // Add services to appointment object for response
+    const populatedServices = await AppointmentService.find({
+      appointment: appointment._id,
+    })
+      .populate('service')
+      .sort({ order: 1 })
+      .lean()
+
+    return {
+      ...appointment.toObject(),
+      services: populatedServices.map((as: any) => as.service),
+      appointmentServices: populatedServices,
+    }
   }
 
   /**
@@ -147,7 +205,25 @@ export class AppointmentService {
       .populate('departmentId')
       .lean()
 
-    return appointments
+    // Populate services for each appointment
+    const appointmentsWithServices = await Promise.all(
+      appointments.map(async (appointment) => {
+        const appointmentServices = await AppointmentService.find({
+          appointment: appointment._id,
+        })
+          .populate('service')
+          .sort({ order: 1 })
+          .lean()
+
+        return {
+          ...appointment,
+          services: appointmentServices.map((as: any) => as.service),
+          appointmentServices: appointmentServices,
+        }
+      })
+    )
+
+    return appointmentsWithServices
   }
 
   /**
@@ -183,7 +259,25 @@ export class AppointmentService {
       Appointment.countDocuments(filter),
     ])
 
-    return { appointments, total }
+    // Populate services for each appointment
+    const appointmentsWithServices = await Promise.all(
+      appointments.map(async (appointment) => {
+        const appointmentServices = await AppointmentService.find({
+          appointment: appointment._id,
+        })
+          .populate('service', 'name price duration')
+          .sort({ order: 1 })
+          .lean()
+
+        return {
+          ...appointment,
+          services: appointmentServices.map((as: any) => as.service),
+          appointmentServices: appointmentServices,
+        }
+      })
+    )
+
+    return { appointments: appointmentsWithServices, total }
   }
 
   /**
@@ -209,7 +303,23 @@ export class AppointmentService {
       .populate('departmentId')
       .lean()
 
-    return appointment
+    if (!appointment) {
+      return null
+    }
+
+    // Populate services for the appointment
+    const appointmentServices = await AppointmentService.find({
+      appointment: appointment._id,
+    })
+      .populate('service')
+      .sort({ order: 1 })
+      .lean()
+
+    return {
+      ...appointment,
+      services: appointmentServices.map((as: any) => as.service),
+      appointmentServices: appointmentServices,
+    }
   }
 
   /**
@@ -271,8 +381,102 @@ export class AppointmentService {
       .populate('departmentId')
       .lean()
 
+    // Delete all AppointmentService entries for this appointment
+    await AppointmentService.deleteMany({ appointment: id })
+
     const deleted = await Appointment.findByIdAndDelete(id)
     return { deleted, appointment }
+  }
+
+  /**
+   * Add a service to an appointment
+   */
+  static async addServiceToAppointment(appointmentId: string, serviceId: string) {
+    // Validate appointment exists
+    const appointment = await Appointment.findById(appointmentId)
+    if (!appointment) {
+      throw new Error('الموعد غير موجود')
+    }
+
+    // Validate service exists
+    await this.validateService(serviceId)
+
+    // Validate service belongs to appointment's department
+    await this.validateServicesBelongToDepartment([serviceId], appointment.departmentId.toString())
+
+    // Check if service already exists in appointment
+    const existing = await AppointmentService.findOne({
+      appointment: appointmentId,
+      service: serviceId,
+    })
+
+    if (existing) {
+      throw new Error('الخدمة موجودة بالفعل في هذا الموعد')
+    }
+
+    // Get current max order
+    const maxOrder = await AppointmentService.findOne({ appointment: appointmentId })
+      .sort({ order: -1 })
+      .lean()
+
+    const order = maxOrder ? (maxOrder.order || 0) + 1 : 0
+
+    // Create AppointmentService entry
+    const appointmentService = await AppointmentService.create({
+      appointment: appointmentId,
+      service: serviceId,
+      order,
+    })
+
+    // Populate and return
+    await appointmentService.populate('service')
+    return appointmentService
+  }
+
+  /**
+   * Remove a service from an appointment
+   */
+  static async removeServiceFromAppointment(appointmentId: string, serviceId: string) {
+    // Validate appointment exists
+    const appointment = await Appointment.findById(appointmentId)
+    if (!appointment) {
+      throw new Error('الموعد غير موجود')
+    }
+
+    // Find and delete AppointmentService entry
+    const appointmentService = await AppointmentService.findOneAndDelete({
+      appointment: appointmentId,
+      service: serviceId,
+    })
+
+    if (!appointmentService) {
+      throw new Error('الخدمة غير موجودة في هذا الموعد')
+    }
+
+    // Check if appointment has any remaining services
+    const remainingServices = await AppointmentService.countDocuments({
+      appointment: appointmentId,
+    })
+
+    if (remainingServices === 0) {
+      throw new Error('لا يمكن حذف آخر خدمة من الموعد. يجب أن يحتوي الموعد على خدمة واحدة على الأقل')
+    }
+
+    return appointmentService
+  }
+
+  /**
+   * Get all services for an appointment
+   */
+  static async getAppointmentServices(appointmentId: string) {
+    const appointmentServices = await AppointmentService.find({
+      appointment: appointmentId,
+    })
+      .populate('service')
+      .sort({ order: 1 })
+      .lean()
+
+    return appointmentServices
   }
 }
 

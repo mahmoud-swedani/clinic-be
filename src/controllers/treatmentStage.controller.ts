@@ -3,6 +3,7 @@
 import { Request, Response } from 'express'
 import mongoose from 'mongoose'
 import { TreatmentStage } from '../models/treatmentStage.model'
+import { AppointmentService } from '../models/appointmentService.model'
 import { Invoice } from '../models/invoice.model'
 import { SalePayment } from '../models/salePayment.model'
 import { Sale } from '../models/sale.model'
@@ -14,9 +15,35 @@ import { AuditService } from '../services/audit.service'
 // ➕ إضافة مرحلة علاج
 export const createTreatmentStage = async (req: Request, res: Response) => {
   try {
-    const stage = await TreatmentStage.create(req.body)
+    // Support both appointmentServiceId (new) and appointmentId (old) for backward compatibility
+    const { appointmentServiceId, appointmentId, ...restData } = req.body
+    
+    // If appointmentServiceId is provided, get the appointment from it
+    let appointment: mongoose.Types.ObjectId | null = null
+    if (appointmentServiceId) {
+      const appointmentService = await AppointmentService.findById(appointmentServiceId)
+        .populate('appointment')
+        .lean()
+      
+      if (!appointmentService) {
+        return sendError(res, 'خدمة الموعد غير موجودة', 404)
+      }
+      
+      appointment = (appointmentService.appointment as any)._id || appointmentService.appointment
+    } else if (appointmentId) {
+      // Backward compatibility: use appointmentId directly
+      appointment = appointmentId as any
+    }
 
-    const { client, appointment, cost } = stage
+    const stageData = {
+      ...restData,
+      appointmentService: appointmentServiceId || undefined,
+      appointment: appointment || undefined,
+    }
+
+    const stage = await TreatmentStage.create(stageData)
+
+    const { client, cost } = stage
     const userId = req.user?._id?.toString() || req.user?.id // MongoDB uses _id
     // المستخدم الذي أضاف المرحلة (طبيب)
 
@@ -357,6 +384,7 @@ export const deleteTreatmentStage = async (req: Request, res: Response) => {
 }
 
 // 📄 الحصول على مراحل علاجية لموعد معين
+// Updated to support both old (appointment) and new (appointmentService) structure
 export const getTreatmentStagesByAppointment = async (
   req: Request,
   res: Response
@@ -366,8 +394,13 @@ export const getTreatmentStagesByAppointment = async (
     const userId = req.user?._id?.toString()
     const user = req.user
 
-    // Build filter for treatment stages
-    const stageFilter: any = { appointment: appointmentId }
+    // Build filter for treatment stages - support both old and new structure
+    const stageFilter: any = {
+      $or: [
+        { appointment: appointmentId },
+        { appointmentService: { $in: [] } }, // Will be populated below
+      ],
+    }
     const userRoleName = user ? getUserRoleName(user) : null
 
     // If user is a doctor, verify the appointment belongs to them
@@ -388,8 +421,76 @@ export const getTreatmentStagesByAppointment = async (
       stageFilter.doctor = userId
     }
 
+    // Get all AppointmentService entries for this appointment
+    const appointmentServices = await AppointmentService.find({
+      appointment: appointmentId,
+    }).lean()
+
+    const appointmentServiceIds = appointmentServices.map((as) => as._id)
+
+    // Update filter to include appointmentService IDs
+    stageFilter.$or = [
+      { appointment: appointmentId },
+      ...(appointmentServiceIds.length > 0 ? [{ appointmentService: { $in: appointmentServiceIds } }] : []),
+    ]
+
     const stages = await TreatmentStage.find(stageFilter)
       .populate('doctor', 'name')
+      .populate('appointment')
+      .populate('appointmentService')
+      .populate('client', 'fullName')
+      .sort({ createdAt: -1 })
+      .lean()
+
+    return sendSuccess(res, stages)
+  } catch (error: any) {
+    return sendError(
+      res,
+      'فشل في جلب المراحل العلاجية',
+      500,
+      error?.message || String(error)
+    )
+  }
+}
+
+// 📄 الحصول على مراحل علاجية لخدمة معينة في موعد
+export const getTreatmentStagesByAppointmentService = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const appointmentServiceId = req.params.appointmentServiceId
+    const userId = req.user?._id?.toString()
+    const user = req.user
+
+    // Verify appointmentService exists
+    const appointmentService = await AppointmentService.findById(appointmentServiceId)
+      .populate('appointment')
+      .lean()
+
+    if (!appointmentService) {
+      return sendError(res, 'خدمة الموعد غير موجودة', 404)
+    }
+
+    const appointment = appointmentService.appointment as any
+
+    // Build filter for treatment stages
+    const stageFilter: any = { appointmentService: appointmentServiceId }
+    const userRoleName = user ? getUserRoleName(user) : null
+
+    // If user is a doctor, verify the appointment belongs to them
+    if (userRoleName === 'طبيب' && userId) {
+      if (appointment.doctor.toString() !== userId) {
+        return sendError(res, 'لا يمكن الوصول إلى بيانات هذا الموعد', 403)
+      }
+
+      // Filter stages to only those where doctor = userId
+      stageFilter.doctor = userId
+    }
+
+    const stages = await TreatmentStage.find(stageFilter)
+      .populate('doctor', 'name')
+      .populate('appointmentService')
       .populate('appointment')
       .populate('client', 'fullName')
       .sort({ createdAt: -1 })

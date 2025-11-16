@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.routes'
 import userRoutes from './routes/user.routes'
 import clientRoutes from './routes/client.routes'
 import appointmentRoutes from './routes/appointment.routes'
+import appointmentServiceRoutes from './routes/appointmentService.routes'
 import branchRoutes from './routes/branch.routes'
 import treatmentStageRoutes from './routes/treatmentStage.routes'
 import invoiceRoutes from './routes/invoice.routes'
@@ -133,6 +134,7 @@ app.use('/api', clientMedicationRoutes)
 app.use('/api', clientImmunizationRoutes)
 app.use('/api', clientTestResultRoutes)
 app.use('/api/appointments', appointmentRoutes)
+app.use('/api/appointments', appointmentServiceRoutes)
 app.use('/api/branches', branchRoutes)
 app.use('/api/treatment-stages', treatmentStageRoutes)
 app.use('/api/invoices', invoiceRoutes)

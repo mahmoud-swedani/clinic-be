@@ -200,7 +200,18 @@ export class InvoiceService {
       const invoice = await Invoice.findById(id)
         .populate('client', 'fullName phone')
         .populate('appointment', 'date doctor')
-        .populate('treatmentStages', 'title cost')
+        .populate({
+          path: 'treatmentStages',
+          select: 'title cost description date isCompleted appointmentService',
+          populate: {
+            path: 'appointmentService',
+            select: '_id service',
+            populate: {
+              path: 'service',
+              select: 'name price duration',
+            },
+          },
+        })
         .populate('createdBy', 'name')
         .lean()
 
@@ -224,7 +235,18 @@ export class InvoiceService {
       const invoice = await Invoice.findById(id)
         .populate('client', 'fullName phone')
         .populate('appointment', 'date doctor')
-        .populate('treatmentStages', 'title cost')
+        .populate({
+          path: 'treatmentStages',
+          select: 'title cost description date isCompleted appointmentService',
+          populate: {
+            path: 'appointmentService',
+            select: '_id service',
+            populate: {
+              path: 'service',
+              select: 'name price duration',
+            },
+          },
+        })
         .populate('createdBy', 'name')
         .lean()
 

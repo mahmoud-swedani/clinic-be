@@ -5,6 +5,7 @@ import {
   createTreatmentStage,
   getTreatmentStagesByClient,
   getTreatmentStagesByAppointment,
+  getTreatmentStagesByAppointmentService,
   getTreatmentStageById,
   updateTreatmentStage,
   deleteTreatmentStage,
@@ -43,6 +44,14 @@ router.get(
   protect,
   authorizeAnyPermission('appointments.view', 'treatment-stages.view'),
   getTreatmentStagesByAppointment
+)
+
+// GET - جلب مراحل علاجية لخدمة معينة في موعد
+router.get(
+  '/appointment-service/:appointmentServiceId',
+  protect,
+  authorizeAnyPermission('appointments.view', 'treatment-stages.view'),
+  getTreatmentStagesByAppointmentService
 )
 
 // GET - جلب مرحلة واحدة

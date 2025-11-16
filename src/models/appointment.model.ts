@@ -7,7 +7,7 @@ export interface IAppointment {
   type: string
   status: 'محجوز' | 'نشط' | 'تم' | 'ملغي'
   notes?: string
-  service: mongoose.Types.ObjectId
+  service?: mongoose.Types.ObjectId // Deprecated: kept for backward compatibility during migration
   departmentId: mongoose.Types.ObjectId
 }
 
@@ -42,7 +42,7 @@ const appointmentSchema = new Schema<IAppointment>(
     service: {
       type: Schema.Types.ObjectId,
       ref: 'Service',
-      required: true,
+      required: false, // Changed to optional for backward compatibility
     },
     departmentId: {
       type: Schema.Types.ObjectId,
@@ -58,6 +58,13 @@ appointmentSchema.index({ date: 1, status: 1 })
 appointmentSchema.index({ client: 1, date: -1 })
 appointmentSchema.index({ doctor: 1, date: -1 })
 appointmentSchema.index({ createdAt: -1 })
+
+// Virtual populate for services via AppointmentService
+appointmentSchema.virtual('services', {
+  ref: 'AppointmentService',
+  localField: '_id',
+  foreignField: 'appointment',
+})
 
 export const Appointment = mongoose.model<IAppointment>(
   'Appointment',
